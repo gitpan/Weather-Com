@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
 	NAME    => 'Weather::Com',
-	VERSION => '0.3',            # sets $VERSION
+	VERSION => '0.3.1',            # sets $VERSION
 	PREREQ_PM => {
 				   XML::Simple    => "",
 				   URI::Escape    => "",

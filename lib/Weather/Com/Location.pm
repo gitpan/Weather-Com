@@ -11,7 +11,7 @@ use Weather::Com::CurrentConditions;
 use Weather::Com::Forecast;
 use base "Weather::Com::Cached";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -43,7 +43,6 @@ sub new {
 	my $self = $class->SUPER::new( \%parameters );
 
 	$self->{ID}    = $parameters{location_id};
-	$self->{ARGS}  = \%parameters;
 	$self->{DEBUG} = $parameters{debug};
 
 	# the weather data will be initialized when the first call on
@@ -61,6 +60,9 @@ sub new {
 	$self->{LSUP} = time();
 
 	bless( $self, $class );
+	
+	# init object, add timezone to ARGS
+	$self->{ARGS}->{zone} = $self->timezone();
 
 	return $self;
 }    # end new()
@@ -105,7 +107,10 @@ sub units {
 
 sub timezone {
 	my $self = shift;
-	$self->refresh();
+	
+	unless ($self->{WEATHER}) {
+		$self->refresh();
+	}
 	return $self->{WEATHER}->{loc}->{zone};
 }
 
@@ -129,10 +134,9 @@ sub localtime {
 	$self->refresh();
 
 	unless ( $self->{LOCALTIME} ) {
-		$self->{LOCALTIME} = Weather::Com::DateTime->new();
+		$self->{LOCALTIME} = Weather::Com::DateTime->new($self->timezone());
 	}
 
-	$self->{LOCALTIME}->epoc( $self->_local_epoc( time() ) );
 	return $self->{LOCALTIME};
 }
 
@@ -143,12 +147,7 @@ sub localtime_ampm {
 	my $self = shift;
 	$self->refresh();
 
-	unless ( $self->{LOCALTIME} ) {
-		$self->{LOCALTIME} = Weather::Com::DateTime->new();
-	}
-
-	$self->{LOCALTIME}->epoc( $self->_local_epoc( time() ) );
-	return $self->{LOCALTIME}->time_ampm();
+	return $self->localtime()->time_ampm();
 }
 
 sub sunrise {
@@ -156,7 +155,7 @@ sub sunrise {
 	$self->refresh();
 
 	unless ( $self->{SUNRISE} ) {
-		$self->{SUNRISE} = Weather::Com::DateTime->new();
+		$self->{SUNRISE} = Weather::Com::DateTime->new($self->timezone());
 	}
 
 	$self->{SUNRISE}->set_time( $self->{WEATHER}->{loc}->{sunr} );
@@ -170,12 +169,7 @@ sub sunrise_ampm {
 	my $self = shift;
 	$self->refresh();
 
-	unless ( $self->{SUNRISE} ) {
-		$self->{SUNRISE} = Weather::Com::DateTime->new();
-	}
-
-	$self->{SUNRISE}->set_time( $self->{WEATHER}->{loc}->{sunr} );
-	return $self->{SUNRISE}->time_ampm();
+	return $self->sunrise()->time_ampm();
 }
 
 sub sunset {
@@ -183,7 +177,7 @@ sub sunset {
 	$self->refresh();
 
 	unless ( $self->{SUNSET} ) {
-		$self->{SUNSET} = Weather::Com::DateTime->new();
+		$self->{SUNSET} = Weather::Com::DateTime->new($self->timezone());
 	}
 
 	$self->{SUNSET}->set_time( $self->{WEATHER}->{loc}->{suns} );
@@ -197,12 +191,7 @@ sub sunset_ampm {
 	my $self = shift;
 	$self->refresh();
 
-	unless ( $self->{SUNSET} ) {
-		$self->{SUNSET} = Weather::Com::DateTime->new();
-	}
-
-	$self->{SUNSET}->set_time( $self->{WEATHER}->{loc}->{suns} );
-	return $self->{SUNSET}->time_ampm();
+	return $self->sunset()->time_ampm();
 }
 
 sub current_conditions {
@@ -238,31 +227,25 @@ sub _update {
 	# 2. get 00:00:00 of today in local time of location
 	# If both in epoc are equal, no update is needed, else we'll get
 	# the new location information.
-	my @lsup = gmtime( $self->_local_epoc( $self->{LSUP} ) );
+	my @lsup = gmtime( $self->{LSUP} + ($self->timezone() * 3600) );
 	$lsup[0] = 0;
 	$lsup[1] = 0;
 	$lsup[2] = 0;
-	my $local_epoc_lsup = timelocal(@lsup);
+	my $local_epoc_lsup = timegm(@lsup);
 
 	$self->{LSUP} = time();
-	my @now = gmtime( $self->_local_epoc( $self->{LSUP} ) );
+	my @now = gmtime( time() + ($self->timezone() * 3600) );
 	$now[0] = 0;
 	$now[1] = 0;
 	$now[2] = 0;
-	my $local_epoc_now = timelocal(@now);
+	my $local_epoc_now = timegm(@now);
 
 	if ( $local_epoc_now > $local_epoc_lsup ) {
-		$self->_debug("refreshing location cache...\n");
+		$self->_debug("should refresh location cache...\n");
 		return 1;
 	}
 
 	return 0;
-}
-
-sub _local_epoc {
-	my $self = shift;
-	my $time = shift;
-	return ( $time + ( $self->{WEATHER}->{loc}->{zone} * 3600 ) );
 }
 
 1;

@@ -3,7 +3,6 @@ Changes
 MANIFEST
 README
 TODO
-BUGS
 lib/Weather/Com.pod
 lib/Weather/Com/AirPressure.pm
 lib/Weather/Com/Base.pm
@@ -19,6 +18,7 @@ lib/Weather/Com/Simple.pm
 lib/Weather/Com/Units.pm
 lib/Weather/Com/UVIndex.pm
 lib/Weather/Com/Wind.pm
+samples/timetest.pl
 samples/weather.pl
 samples/weather_ext.pl
 t/Base.t

@@ -7,7 +7,7 @@ use Data::Dumper;
 use Weather::Com::DayForecast;
 use base "Weather::Com::Cached";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -102,8 +102,10 @@ sub _build_forecasts {
 	}
 
 	# then update the DayForecast objects
+	# but put the timeszone into it...
 	foreach my $day ( @{ $self->{WEATHER}->{dayf}->{day} } ) {
-		$self->{DAYS}->[ $day->{d} ]->update($day);
+		my %args = (%{$day}, (zone => $self->{ARGS}->{zone}));
+		$self->{DAYS}->[ $day->{d} ]->update(\%args);
 	}
 
 	return 1;

@@ -6,7 +6,7 @@ use Class::Struct;
 use Weather::Com::DayPart;
 use Weather::Com::DateTime;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Class::Struct subclass.
@@ -37,12 +37,12 @@ sub update {
 
 	# update date and time data
 	unless ( $self->date() ) {
-		$self->date( Weather::Com::DateTime->new() );
-		$self->sunrise( Weather::Com::DateTime->new() );
-		$self->sunset( Weather::Com::DateTime->new() );
+		$self->date( Weather::Com::DateTime->new( $day{zone} ) );
+		$self->sunrise( Weather::Com::DateTime->new( $day{zone} ) );
+		$self->sunset( Weather::Com::DateTime->new( $day{zone} ) );
 	}
 
-	$self->date()->set_date( $day{dt} );    
+	$self->date()->set_date( $day{dt} );
 	$self->sunrise()->set_time( $day{sunr} );
 	$self->sunset()->set_time( $day{suns} );
 
@@ -50,9 +50,10 @@ sub update {
 	# if $day{hi} eq "N/A" then there is no daytime forecast
 	unless ( $day{hi} eq 'N/A' ) {
 		$self->high( $day{hi} );
-	} else {
-		$self->high('N/A');
 	}
+	else {
+		$self->high('N/A');
+	}    
 	$self->low( $day{low} );
 
 	foreach my $daypart ( @{ $day{part} } ) {

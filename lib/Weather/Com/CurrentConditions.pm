@@ -10,7 +10,7 @@ use Weather::Com::UVIndex;
 use Weather::Com::Wind;
 use base "Weather::Com::Cached";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -181,7 +181,7 @@ sub last_updated {
 	$self->refresh();
 
 	unless ( $self->{LAST_XML_UPDATE} ) {
-		$self->{LAST_XML_UPDATE} = Weather::Com::DateTime->new();
+		$self->{LAST_XML_UPDATE} = Weather::Com::DateTime->new($self->{ARGS}->{zone});
 	}
 
 	$self->{LAST_XML_UPDATE}->set_lsup( $self->{WEATHER}->{cc}->{lsup} );

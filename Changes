@@ -1,5 +1,11 @@
 Revision history for Perl extension Weather::Com.
 
+0.3.1 Tue Mar 01 00:30 2005
+    - Fixed Bug [11720]: The new Weather::Com::DateTime objects seemed to work 
+      properly only in Germany (home of author)?!?! 
+      Some localtime/gmtime/Time::Format problems.
+      This is fixed now. Weather::Com::DateTime has been totally rewritten.
+
 0.3 Do Feb 26 16:16:00 2005
     - Introducing forecasts. There are the following new classes:
        - Weather::Com::Forecast
@@ -32,7 +38,7 @@ Revision history for Perl extension Weather::Com.
       So we'll get some structure in it. This will be usefull if one wants
       to write some other caching package, we than can tell it 
       Weather::Com::Cached::MySQL for example, etc.
-    - added automated version information (using the CVS $Revision: 1.12 $ tag)
+    - added automated version information (using the CVS $Revision: 1.13 $ tag)
       to all packages
     - added consistency checking for paramters passed to Weather::Com
     - Weather::Com now only accepts paths to put the cache in if it is

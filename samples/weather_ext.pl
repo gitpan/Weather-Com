@@ -1,10 +1,13 @@
 #!/usr/bin/perl
-# $Revision: 1.3 $
+# $Revision: 1.4 $
 use strict;
 use Weather::Com::Finder;
 use Data::Dumper;
 
 $| = 1;
+
+# have a cvs driven version...
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
 
 # you have to fill in your ids from weather.com here
 my $PartnerId  = '';
@@ -39,7 +42,8 @@ my %weatherargs = (
 my $weather_finder = Weather::Com::Finder->new(%weatherargs);
 
 # print greeting
-print "\nWelcome to Uncle Tom's weather station...\n";
+print "\nWelcome to Uncle Tom's weather station, extended edition...\n";
+print "This is V$VERSION\n";
 print "\nPlease enter a location name to look for, e.g\n";
 print "'Heidelberg' or 'Seattle, WA', or 'Munich, Germany'\n\n";
 
@@ -89,16 +93,18 @@ while ( chomp( my $input = <STDIN> ) ) {
 		# print location data
 		print " * this city is located at: ", $location->latitude(), "deg N, ",
 		  $location->longitude(), "deg E\n";
-		print " * local time is ",               $location->localtime()->time(), "\n";
-		print " * sunrise will be/has been at ", $location->sunrise()->time(),   "\n";
+		print " * local time is ", $location->localtime()->time(), "\n";
+		print " * sunrise will be/has been at ", $location->sunrise()->time(),
+		  "\n";
 		print " * sunset (am/pm) will be/has been at ",
 		  $location->sunset()->time_ampm(), "\n";
 		print " * timezone is GMT + ", $location->timezone(), "hour(s)\n";
 
 		# current conditions
 		print "\nCurrent Conditions (last update ",
-			$location->current_conditions()->last_updated()->time()," on ",
-			$location->current_conditions()->last_updated()->formatted('dd.mm.yyyy'),"):\n";
+		  $location->current_conditions()->last_updated()->time(), " on ",
+		  $location->current_conditions()->last_updated()
+		  ->formatted('dd.mm.yyyy'), "):\n";
 		print " * current conditions are ",
 		  $location->current_conditions()->description(), ".\n";
 		print " * visibilty is about ",
@@ -148,7 +154,7 @@ while ( chomp( my $input = <STDIN> ) ) {
 
 		print "Today:\n";
 		print "... day of week: ", $today->date()->weekday(), ", ",
-		  $today->date()->date(), "\n";    
+		  $today->date()->date(), "\n";
 		if ( $today->high() ) {
 			print "... max temp:    ", $today->high(), "\n";
 		}
@@ -181,7 +187,8 @@ while ( chomp( my $input = <STDIN> ) ) {
 		  "\n";
 
 		foreach my $day ( $forecast->all() ) {
-			print "Have forecast for ", $day->date()->weekday(), "\n";
+			print "Have forecast for ", $day->date()->weekday(), ", ",
+			  $day->date()->date(), "\n";    
 			print "Max Temp is ", $day->high(), "\n";
 			print "Min Temp is ", $day->low(),  "\n";
 			print "Percent chance of precipitation at night: ",

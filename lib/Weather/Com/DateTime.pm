@@ -9,7 +9,7 @@ use Data::Dumper;
 use Time::Format;
 use Time::Local;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
 
 our %months = (
 	'Jan' => 0,
@@ -34,9 +34,12 @@ sub new {
 	my $class = ref($proto) || $proto;
 	my $self  = {};
 
-	$self->{EPOC} = time();
+	$self->{EPOC} = timelocal(gmtime(time()));
 	if (@_) {
-		$self->{EPOC} = shift;
+		$self->{ZONE} = shift;
+	}
+	else {
+		$self->{ZONE} = 0;
 	}
 
 	bless( $self, $class );
@@ -47,24 +50,26 @@ sub new {
 #------------------------------------------------------------------------
 # very special setter methods
 #------------------------------------------------------------------------
+# this method assumes that time is irrelevant => no conversion needed
 sub set_date {
-	my $self        = shift;
-	my $datestring  = shift;
-	my $monthstring = substr( $datestring, 0, 3 );
-	my $daystring   = substr( $datestring, 3 );
-	my @now         = localtime();
+	my $self       = shift;
+	my $datestring = shift;
+	my $month      = substr( $datestring, 0, 3 );
+	my $day        = substr( $datestring, 3 );
+	my @now        = gmtime();
 
-	eval {
-		$self->{EPOC} =
-		  timegm( 0, 0, 0, $daystring, $months{$monthstring}, $now[5] );
-	};
+	my $localmidnight = undef;
+	eval { $localmidnight = timelocal( 0, 0, 0, $day, $months{$month}, $now[5] ); };
 	if ($@) {
 		croak($@);
 	}
 
+	my $gmtime = $localmidnight - ( $self->{ZONE} * 3600 );
+	$self->{EPOC} = $gmtime;
 	return $self->{EPOC};
 }
 
+# this method assumes that the date is irrelevant!
 sub set_time {
 	my $self       = shift;
 	my $timestring = shift;
@@ -73,16 +78,21 @@ sub set_time {
 	my $minute     = substr( $timestring, $colon + 1, 2 );
 	my $ampm       = substr( $timestring, $colon + 4 );
 	$hour += 12 if ( lc($ampm) eq "pm" );
-	my @now = localtime();
 
+	my @now       = gmtime();
+	my $localtime = undef;
 	eval {
-		$self->{EPOC} =
-		  timelocal( 0, $minute, $hour, $now[3], $now[4], $now[5] );
+		$localtime = timelocal( 0, $minute, $hour, $now[3], $now[4], $now[5] );
 	};
 	if ($@) {
 		croak($@);
 	}
+	if ($@) {
+		croak($@);
+	}
 
+	my $gmtime = $localtime - ( $self->{ZONE} * 3600 );
+	$self->{EPOC} = $gmtime;
 	return $self->{EPOC};
 }
 
@@ -100,33 +110,44 @@ sub set_lsup {
 	$year += 100;
 	$hour += 12 if ( $ampm eq "PM" );
 
-	eval {
-		$self->{EPOC} = timelocal( 0, $min, $hour, $mday, $mon - 1, $year );
-	};
+	my $localtime;
+	eval { $localtime = timelocal( 0, $min, $hour, $mday, $mon - 1, $year ); };
 	if ($@) {
 		croak($@);
 	}
 
+	my $gmtime = $localtime - ( $self->{ZONE} * 3600 );
+	$self->{EPOC} = $gmtime;
 	return $self->{EPOC};
 }
 
 #------------------------------------------------------------------------
 # Access date and time
 #------------------------------------------------------------------------
+# epoc is alway GMT
 sub epoc {
 	my $self = shift;
 
 	if (@_) {
-		$self->{EPOC} = shift;
+		$self->{EPOC} = timelocal(gmtime(shift));
 	}
 
-	return $self->{EPOC};
+	# we have to fake up $epoc
+	# because of Time::Format behaviour, $epoc has to be in localtime
+	# and to be able to provide a GMT conform epoc, we have to transform
+	# this here
+	return timegm(localtime($self->{EPOC}));
 }
 
 sub formatted {
-	my $self   = shift;
-	my $format = shift;
-	return $time{ $format, $self->{EPOC} };
+	my $self      = shift;
+	my $format    = shift;
+	
+	# Time::Format always returns localtime of the server the
+	# script runs on. We have to eliminate this.
+	#my $fakeepoc = (gmtime($self->{EPOC}));
+	my $localepoc = $self->{EPOC} + ( $self->{ZONE} * 3600 );
+	return $time{ $format, $localepoc };    
 }
 
 #------------------------------------------------------------------------
@@ -134,32 +155,32 @@ sub formatted {
 #------------------------------------------------------------------------
 sub weekday {
 	my $self = shift;
-	return $time{ 'Weekday', $self->{EPOC} };
+	return $self->formatted('Weekday');
 }
 
 sub date {
 	my $self = shift;
-	return $time{ 'd. Month yyyy', $self->{EPOC} };
+	return $self->formatted('d. Month yyyy');
 }
 
 sub year {
 	my $self = shift;
-	return $time{ 'yyyy', $self->{EPOC} };
+	return $self->formatted('yyyy');
 }
 
 sub month {
 	my $self = shift;
-	return $time{ 'Month', $self->{EPOC} };
+	return $self->formatted('Month');
 }
 
 sub mon {
 	my $self = shift;
-	return $time{ 'mm{on}', $self->{EPOC} };
+	return $self->formatted('mm{on}');
 }
 
 sub day {
 	my $self = shift;
-	return $time{ 'dd', $self->{EPOC} };
+	return $self->formatted('dd');
 }
 
 #------------------------------------------------------------------------
@@ -167,12 +188,12 @@ sub day {
 #------------------------------------------------------------------------
 sub time {
 	my $self = shift;
-	return $time{ 'hh:mm', $self->{EPOC} };
+	return $self->formatted('hh:mm');
 }
 
 sub time_ampm {
 	my $self = shift;
-	return $time{ 'H:mm AM', $self->{EPOC} };
+	return $self->formatted('H:mm AM');
 }
 
 #------------------------------------------------------------------------
@@ -215,10 +236,16 @@ Weather::Com::DateTime - date and time class
   #!/usr/bin/perl -w
   use Weather::Com::DateTime;
   
-  my $now = time();
-  my $datetime = Weather::Com::DateTime->new($now);
-  print "Today it's the ", $datetime->date(), "\n";
-  print "and it's currently ", $datetime->time(), "o'clock.\n";
+  my $gmt_offset = 1; # e.g. for Germany in winter
+  my $datetime = Weather::Com::DateTime->new($gmt_offset);
+  $datetime->set_lsup('02/25/05 11:21 PM Local Time');
+  
+  print "This is the date '02/25/05 11:21 PM' in Germany:\n";
+  print "Epoc:                    ", $datetime->epoc(), "\n";
+  print "GMT (UTC):               ". gmtime($datetime->epoc()). "\n";
+  print "My local time:           ". localtime($datetime->epoc()). "\n";
+  print "And finally German time: ", $datetime->time(), " o'clock at ", 
+  	$datetime->date(), "\n\n";
 
 =head1 DESCRIPTION
 
@@ -229,6 +256,25 @@ This is done because there are many ways to use a date or time and to
 present it in your programs using I<Weather::Com>. This class provides
 some predefined formats for date and time but also enables you to
 easily define your own ones.
+
+These objects always represent the local time of a I<Weather::Com::Location>
+object. That is, if you have a location object for New York City and your
+server running the weather script is located in Los Angeles, for example,
+this line
+
+  print "Sunrise at: ", $location->sunrise()->time(), "\n";
+
+will print the time of sunrise (in 24h format) in EST and not corresponding
+to the timezone of Los Angeles! If you'd like to now what this is in GMT 
+you could call
+
+  print "Sunrise at: ". gmtime($location->sunrise()->epoc()). "\n";
+
+or if you want to know when the sun rises at the location in your
+servers local time than just call
+
+  print "Sunrise at: ". localtime($location->sunrise()->epoc()). "\n";
+
 
 There are two ways to get your own date or time format:
 
@@ -254,68 +300,23 @@ You usually would not construct an object of this class yourself.
 This is implicitely done when you call one of the OO interfaces
 date or time methods.
 
-The constructor can take a time in epoc seconds.
+The constructor can take a GMT offset in positive or negative hours.
 
-=head1 INTERFACE
-
-This class can simply be customized to fit your personal needs. 
-
-If you have your own special date and time formats you always want 
-to use in your programm, simply change the default ones.
-
-If you sometimes need another format than usual, use the C<formatted()>
-method instead, providing a date or time format string to it, corresponding
-to the I<Time::Format> module.
-
-The following methods should not be removed because they make up the interface
-of the class as used by the rest of I<Weather::Com>:
-
-=over 4
-
-=item *
-
-C<set_date()>
-
-=item *
-
-C<set_time()>
-
-=item *
-
-C<set_lsup()>
-
-=item *
-
-C<date()>
-
-=item *
-
-C<time()>
-
-=item *
-
-C<time_ampm()>
-
-=back
-
-All these methods are needed by the other classes.
-
-Please do not touch the setter methods and the 'ampm' method.
-
-The methods C<date()> and C<time()> can be adjusted by you to fit
-your date and time format wishes, as long as they return anything.
+If one calls the constructor without any GMT offset, we assume you want
+a GMT object.
 
 =head1 METHODS
 
 =head2 epoc(epoc seconds)
 
-With this method you can set the date and time using epocs directly.
+With this method you can set the date and time using epocs (GMT) directly.
 
-It returns the currently set epoc seconds.
+It returns the currently set epoc seconds (GMT).
 
 =head2 formatted(format)
 
-This method returns a date or time formatted in the way you ask for.
+This method returns a date or time formatted in the way you ask for and
+corresponding to the local time of the parent object.
 
 The C<format> you provide to this method has to be a valid I<Time::Format>
 format. For details please refer to L<Time::Format>.

@@ -1,9 +1,12 @@
 #!/usr/bin/perl -w
-# $Revision: 1.11 $
+# $Revision: 1.12 $
 use strict;
 use Weather::Com::Simple;
 
 $| = 1;
+
+# have a cvs driven version...
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.12 $ =~ /(\d+)/g;
 
 # you have to fill in your ids from weather.com here
 my $PartnerId  = '';
@@ -32,6 +35,7 @@ my %weatherargs = (
 
 # print greeting
 print "\nWelcome to Uncle Tom's weather station...\n";
+print "This is V$VERSION\n";
 print "\nPlease enter a location name to look for, e.g\n";
 print "'Heidelberg' or 'Seattle, WA', or 'Munich, Germany'\n\n";
 
