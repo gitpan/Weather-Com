@@ -1,0 +1,9 @@
+Following things have to be done next...
+
+ * provide a high level interface to all interesting weather data,
+   not only Weather::Simple
+   
+ * caching
+   - do something with 'm' and 's'
+   
+ * add more testing

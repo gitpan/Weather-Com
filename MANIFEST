@@ -1,0 +1,14 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+TODO
+BUGS
+t/Com.t
+t/Cached.t
+t/Simple.t
+lib/Weather/Com.pm
+lib/Weather/Cached.pm
+lib/Weather/Simple.pm
+samples/weather.pl
+META.yml                                 Module meta-data (added by MakeMaker)
