@@ -7,17 +7,17 @@
 
 use Test::More tests => 6;
 BEGIN { 
-	use_ok('Weather::Com');
+	use_ok('Weather::Com::Base');
 };
 
 #########################
 
-my $wc = Weather::Com->new();
-isa_ok($wc, "Weather::Com",    'Is a Weatcher::Com object');
+my $wc = Weather::Com::Base->new();
+isa_ok($wc, "Weather::Com::Base",    'Is a Weatcher::Com::Base object');
 
-# Test static methods of Weather::Com
-is(&Weather::Com::celsius2fahrenheit(20), 68, 'Celsius to Fahrenheit conversion');
-is(&Weather::Com::fahrenheit2celsius(68), 20, 'Fahrenheit to Celsius conversion');
+# Test static methods of Weather::Com::Base
+is(&Weather::Com::Base::celsius2fahrenheit(20), 68, 'Celsius to Fahrenheit conversion');
+is(&Weather::Com::Base::fahrenheit2celsius(68), 20, 'Fahrenheit to Celsius conversion');
 
 
 # test search method

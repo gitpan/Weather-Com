@@ -7,14 +7,14 @@
 
 use Test::More tests => 5;
 BEGIN { 
-	use_ok('Weather::Cached');
+	use_ok('Weather::Com::Cached');
 };
 
 #########################
 
-my $wc = Weather::Cached->new();
-isa_ok($wc, "Weather::Cached", 'Is a Weatcher::Cached object');
-isa_ok($wc, "Weather::Com",    'Is a Weatcher::Com object');
+my $wc = Weather::Com::Cached->new();
+isa_ok($wc, "Weather::Com::Cached", 'Is a Weatcher::Com::Cached object');
+isa_ok($wc, "Weather::Com::Base",   'Is a Weatcher::Com::Base object');
 
 # test search method
 my $heidelberg_locs = {

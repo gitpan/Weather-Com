@@ -1,15 +1,22 @@
 #!/usr/bin/perl -w
-# $Revision: 1.8 $
+# $Revision: 1.10 $
 use strict;
-use Weather::Simple;
+use Weather::Com::Simple;
 
 $| = 1;
-my $PartnerId  = '';	# you have to fill in your ids from weather.com here
+
+# you have to fill in your ids from weather.com here
+my $PartnerId  = '';
 my $LicenseKey = '';
+
+# if you need a proxy... maybe with authentication
+my $Proxy      = '';
+my $Proxy_User = '';
+my $Proxy_Pass = '';                     
 
 # debugging on/off
 my $debugmode = 0;
-if ( $ARGV[0] && ($ARGV[0] eq "-d")) {
+if ( $ARGV[0] && ( $ARGV[0] eq "-d" ) ) {
 	warn "Debug mode turned on.\n";
 	$debugmode = 1;
 }
@@ -18,6 +25,9 @@ my %weatherargs = (
 					'partner_id' => $PartnerId,
 					'license'    => $LicenseKey,
 					'debug'      => $debugmode,
+					'proxy'      => $Proxy,
+					'proxy_user' => $Proxy_User,
+					'proxy_pass' => $Proxy_Pass,
 );
 
 # print greeting
@@ -41,8 +51,9 @@ while ( chomp( my $input = <STDIN> ) ) {
 	last if ( $input =~ /^end|quit|exit$/ );
 
 	# add place to config hash and get weather
-	$weatherargs{'place'} = $input;
-	my $ws      = Weather::Simple->new(%weatherargs);
+	$weatherargs{'place'}      = $input;
+
+	my $ws      = Weather::Com::Simple->new(%weatherargs);
 	my $weather = $ws->get_weather();
 
 	# if $ws->get_weather() returned 'undef', we haven't found anything...
@@ -55,7 +66,9 @@ while ( chomp( my $input = <STDIN> ) ) {
 	# if we found anything we'll print it out...
 	# Weather::Simple allways returns an arrayref. maybe we found more
 	# than 1 location's weather
-	print "\nFound weather data for " . ( $#{$weather} + 1 ) . " locations:\n\n";
+	print "\nFound weather data for "
+	  . ( $#{$weather} + 1 )
+	  . " locations:\n\n";
 	foreach my $location_weather ( @{$weather} ) {
 
 		# print a nice heading underlined by '===='

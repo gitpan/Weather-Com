@@ -1,14 +1,14 @@
-package Weather::Cached;
-
-# $Revision: 1.5 $
+package Weather::Com::Cached;
 
 use 5.006;
 use strict;
 use warnings;
 use Storable qw(lock_store lock_retrieve);
 use Data::Dumper;
-use Weather::Com;
-use base "Weather::Com";
+use Weather::Com::Base;
+use base "Weather::Com::Base";
+
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -28,15 +28,24 @@ sub new {
 	# creating the SUPER instance
 	my $self = $class->SUPER::new( \%parameters );
 
-	# some caching attributes
+	# where to put the cache files?
 	if ( $parameters{cache} ) {
 		$self->{PATH} = $parameters{cache};
 	} else {
 		$self->{PATH} = ".";
 	}
 
+	# check if cache is writable
+	unless ( -w $self->{PATH} ) {
+		die ref($self)
+		  . ": path to cache not writable: "
+		  . $self->{PATH} . "!\n";
+	}
+
 	# parameter cache
 	$self->{PARAMS} = undef;
+
+	bless( $self, $class );
 
 	return $self;
 }
@@ -51,12 +60,15 @@ sub get_weather {
 	$self->_debug("Trying to get data for $locid");
 
 	unless ($locid) {
-		die ref($self), "Please provide a location id!\n";
+		die ref($self), ": Please provide a location id!\n";
 	}
 
 	# try to load an existing cache file
 	my $weathercache = {};
-	eval { $weathercache = lock_retrieve( $self->{PATH} . "/$locid.dat" ); };
+	eval {
+		$weathercache =
+		  lock_retrieve( $self->{PATH} . "/" . $self->{UNITS} . "_$locid.dat" );
+	};
 	if ( $@ or !$weathercache ) {
 		$self->_debug("No cache file found.");
 		$weathercache = {};
@@ -123,7 +135,13 @@ sub get_weather {
 		}
 
 		# save data to cache file
-		unless ( lock_store( $weathercache, $self->{PATH} . "/$locid.dat" ) ) {
+		unless (
+				lock_store(
+							$weathercache,
+							$self->{PATH} . "/" . $self->{UNITS} . "_$locid.dat"
+				)
+		  )
+		{    
 			die ref($self), ": ERROR I/O problem while storing cachefile!";
 		}
 	}
@@ -175,7 +193,7 @@ sub _reset_params {
 sub _older_than {
 	my $self              = shift;
 	my $caching_timeframe = shift;
-	my $cached            = shift;
+	my $cached            = shift || 0 ;
 	my $now               = time();
 
 	if ( $cached < ( $now - $caching_timeframe * 60 ) ) {
@@ -193,12 +211,12 @@ __END__
 
 =head1 NAME
 
-Weather::Cached - Perl extension for getting weather information from I<weather.com>
+Weather::Com::Cached - Perl extension for getting weather information from I<weather.com>
 
 =head1 SYNOPSIS
 
   use Data::Dumper;
-  use Weather::Cached;
+  use Weather::Com::Cached;
   
   # define parameters for weather search
   my %params = (
@@ -215,7 +233,7 @@ Weather::Cached - Perl extension for getting weather information from I<weather.
   );
   
   # instantiate a new weather.com object
-  my $cached_weather = Weather::Cache->new(%params);
+  my $cached_weather = Weather::Com::Cached->new(%params);
   
   # search for locations called 'Heidelberg'
   my $locations = $cached_weather->search('Heidelberg')
@@ -229,23 +247,22 @@ Weather::Cached - Perl extension for getting weather information from I<weather.
 
 =head1 DESCRIPTION
 
-I<Weather::Cache> is a Perl module that provides low level OO interface
+I<Weather::Com::Cached> is a Perl module that provides low level OO interface
 to gather all weather information that is provided by I<weather.com>. 
+
+Please refer to L<Weather::Com> for the high level interfaces.
 
 This module implements the caching business rules that apply to all
 applications programmed against the I<xoap> API of I<weather.com>.
 Except from the I<cache> parameter to be used while instantiating a new
-object instance, this module has the same API than I<Weather::Com>. It's
-only a simple caching wrapper around it.
+object instance, this module has the same API than I<Weather::Com::Base>.
+It's only a simple caching wrapper around it.
 
 Although it's really simple, the module uses I<Storable> methods 
 I<lock_store> and I<lock_retrieve> to implement shared locking for 
 reading cache files and exclusive locking for writing to chache files. 
 By this way the same cache files should be able to be used by several
-application instances using I<Weather::Cache>.
-
-For a more high level interface please have a look at I<Weather::Simple>
-that provides the same simple API than I<Weather::Underground> does.
+application instances using I<Weather::Com::Cached>.
 
 You'll need to register at I<weather.com> to to get a free partner id
 and a license key to be used within all applications that you want to
@@ -257,20 +274,22 @@ L<http://www.weather.com/services/xmloap.html>
 
 =head2 new(hash or hashref)
 
-This constructor takes the same hash or hashref as I<Weather::Com> does.
-Please refer to that documentation for further details.
+This constructor takes the same hash or hashref as I<Weather::Com::Base>
+does. Please refer to that documentation for further details.
 
-Except from the I<Weather::Com>'s parameters this constructor takes a
-parameter I<cache> which defines the path to a directory into which 
-all cache files will be put. The cache directory defaults to '.'.
+Except from the I<Weather::Com::Base>'s parameters this constructor 
+takes a parameter I<cache> which defines the path to a directory into 
+which all cache files will be put. 
+
+The cache directory defaults to '.'.
 
 =head1 METHODS
 
-That's all the same as for I<Weather::Com>.
+That's all the same as for I<Weather::Com::Base>.
 
 =head1 SEE ALSO
 
-See also documentation of L<Weather::Com> and L<Weather::Simple>.
+See also documentation of L<Weather::Com> and L<Weather::Com::Base>.
 
 =head1 AUTHOR
 

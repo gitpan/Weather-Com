@@ -5,7 +5,7 @@
 
 use Test::More tests => 1;
 BEGIN { 
-	use_ok('Weather::Simple'); 
+	use_ok('Weather::Com::Simple'); 
 };
 
 #########################

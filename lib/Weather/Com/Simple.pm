@@ -1,8 +1,10 @@
-package Weather::Simple;
+package Weather::Com::Simple;
 
-# $Revision: 1.9 $
+use Carp;
+use Weather::Com::Base qw(celsius2fahrenheit convert_winddirection);
+use Weather::Com::Cached;
 
-use Weather::Cached;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -34,18 +36,24 @@ sub new {
 	}
 
 	# put wanted parameters into $self
-	$self->{PLACE} = $parameters{place};
-	$self->{PROXY} = $parameters{proxy} if ( $parameters{proxy} );
+	$self->{PLACE}      = $parameters{place};
+	$self->{PROXY}      = $parameters{proxy} if ( $parameters{proxy} );
+	$self->{PROXY_USER} = $parameters{proxy_user}
+	  if ( $parameters{proxy_user} );
+	$self->{PROXY_PASS} = $parameters{proxy_pass}
+	  if ( $parameters{proxy_pass} );
 	$self->{DEBUG} = $parameters{debug} if ( $parameters{debug} );
 	$self->{CACHE} = $parameters{cache} if ( $parameters{cache} );
 
-	# Weather::Com object
+	# Weather::Com::Cached object
 	my %weatherargs = (
-						'current'  => 1,
-						'forecast' => 0,
-						'proxy'    => $self->{PROXY},
-						'debug'    => $self->{DEBUG},
-						'cache'    => $self->{CACHE},
+						'current'    => 1,
+						'forecast'   => 0,
+						'proxy'      => $self->{PROXY},
+						'proxy_user' => $self->{PROXY_USER},
+						'proxy_pass' => $self->{PROXY_PASS},
+						'debug'      => $self->{DEBUG},
+						'cache'      => $self->{CACHE},
 	);
 
 	$weatherargs{timeout} = $parameters{timeout} if ( $parameters{timeout} );
@@ -54,7 +62,7 @@ sub new {
 	$weatherargs{license} = $parameters{license} if ( $parameters{license} );
 
 	# initialize weather object
-	$self->{WEATHER} = Weather::Cached->new(%weatherargs);
+	$self->{WEATHER} = Weather::Com::Cached->new(%weatherargs);
 
 	return $self;
 }    # end new()
@@ -91,15 +99,20 @@ sub get_weather {
 			'celsius'             => $weatherdata->{cc}->{tmp},
 			'temperature_celsius' => $weatherdata->{cc}->{tmp},
 			'windchill_celsius'   => $weatherdata->{cc}->{flik},
-			'fahrenheit'          =>
-			  &Weather::Com::celsius2fahrenheit( $weatherdata->{cc}->{tmp} ),
+			'fahrenheit' => celsius2fahrenheit( $weatherdata->{cc}->{tmp} ),
 			'temperature_fahrenheit' =>
-			  &Weather::Com::celsius2fahrenheit( $weatherdata->{cc}->{tmp} ),
+			  celsius2fahrenheit( $weatherdata->{cc}->{tmp} ),
 			'windchill_fahrenheit' =>
-			  &Weather::Com::celsius2fahrenheit( $weatherdata->{cc}->{flik} ),
+			  celsius2fahrenheit( $weatherdata->{cc}->{flik} ),    
+
+			# wind
+			'wind'          => _parse_wind( $weatherdata->{cc}->{wind} ),
+			'windspeed_kmh' =>
+			  _parse_windspeed_kmh( $weatherdata->{cc}->{wind} ),
+			'windspeed_mph' =>
+			  _parse_windspeed_mph( $weatherdata->{cc}->{wind} ),
 
 			# other
-			'wind'       => _parse_wind( $weatherdata->{cc}->{wind} ),
 			'humidity'   => $weatherdata->{cc}->{hmid},
 			'conditions' => $weatherdata->{cc}->{t},
 			'pressure'   => _parse_pressure( $weatherdata->{cc}->{bar} ),
@@ -125,12 +138,36 @@ sub _parse_wind {
 	if ( lc( $winddata->{s} ) =~ /calm/ ) {
 		$wind = "calm";
 	} else {
-		my $kmh       = $winddata->{s};
-		my $mph       = sprintf( "%d", $kmh * 0.6213722 );
-		my $direction = &Weather::Com::convert_winddirection($winddata->{t});
+		my $kmh       = _parse_windspeed_kmh($winddata);
+		my $mph       = _parse_windspeed_mph($winddata);
+		my $direction = convert_winddirection( $winddata->{t} );
 		$wind = "$mph mph $kmh km/h from the $direction";
 	}
 	return $wind;
+}
+
+sub _parse_windspeed_kmh {
+	my $winddata = shift;
+	my $speed;
+
+	if ( lc( $winddata->{s} ) =~ /calm/ ) {
+		$speed = "calm";
+	} else {
+		$speed = $winddata->{s};
+	}
+	return $speed;
+}
+
+sub _parse_windspeed_mph {
+	my $winddata = shift;
+	my $speed;
+
+	if ( lc( $winddata->{s} ) =~ /calm/ ) {
+		$speed = "calm";
+	} else {
+		$speed = sprintf( "%d", $winddata->{s} * 0.6213722 );
+	}
+	return $speed;
 }
 
 sub _parse_pressure {
@@ -166,7 +203,7 @@ sub _debug {
 	my $self   = shift;
 	my $notice = shift;
 	if ( $self->{DEBUG} ) {
-		warn ref($self) . " DEBUG NOTE: $notice\n";
+		carp ref($self) . " DEBUG NOTE: $notice\n";
 		return 1;
 	}
 	return 0;
@@ -174,30 +211,28 @@ sub _debug {
 
 1;
 
-
 __END__
 
 =pod
 
 =head1 NAME
 
-Weather::Simple - Simple Wrapper around the I<Weather::Cached> API
+Weather::Com::Simple - Simple Wrapper around the L<Weather::Com::Cached> API
 
 =head1 SYNOPSIS
 
   use Data::Dumper;
-  use Weather::Simple;
+  use Weather::Com::Simple;
   
   # define parameters for weather search
   my %params = (
-		'cache'      => '/tmp/weathercache',
 		'partner_id' => 'somepartnerid',
 		'license'    => '12345678',
 		'place'      => 'Heidelberg',
   );
   
   # instantiate a new weather.com object
-  my $simple_weather = Weather::Simple->new(%params);
+  my $simple_weather = Weather::Com::Simple->new(%params);
 
   my $weather = $simple_weather->get_weather();
   
@@ -206,16 +241,19 @@ Weather::Simple - Simple Wrapper around the I<Weather::Cached> API
 
 =head1 DESCRIPTION
 
-I<Weather::Simple> is a very high level wrapper around I<Weather::Cached>.
+I<Weather::Com::Simple> is a very high level wrapper around I<Weather::Com::Cached>.
+You provide a place to search for (e.g. a city or "city, country") and you'll get
+back a simple hash containing some usefull weather information about all locations
+whose name matches to the search string.
 
 =head1 CONSTRUCTOR
 
 =head2 new(hash or hashref)
 
-This constructor takes the same hash or hashref as I<Weather::Cached> does.
+The constructor takes the same hash or hashref as L<Weather::Com::Cached> does.
 Please refer to that documentation for further details.
 
-Except from the I<Weather::Cached>' parameters this constructor takes a
+Except from the L<Weather::Com::Cached> parameters this constructor takes a
 parameter I<place> which defines the location to search for. It is not
 possible to provide the location to search to the I<get_weather()> method!
 
@@ -223,16 +261,51 @@ possible to provide the location to search to the I<get_weather()> method!
 
 =head2 get_weather()
 
-This method invokes the I<Weather::Cached> API to fetch some
+This method invokes the L<Weather::Com::Cached> API to fetch some
 weather information and returns an arrayref containing one
 or many hashrefs with some high level weather information.
 
-If no weather data is found for a location, it returns
+If no location matching the search string is found, it returns
 I<undef>.
+
+When you construct a L<Weather::Com::Simple> object like shown in
+the synopsis above, the arrayref returned has the following structure:
+
+  $VAR1 = [
+		{
+			'place'      => 'Heidelberg, Germany',
+			'celsius'                => '0',
+			'fahrenheit'             => '32',
+			'temperature_celsius'    => '0',
+			'temperature_fahrenheit' => '32'
+			'windchill_celsius'      => '-6',
+			'windchill_fahrenheit'   => '21',
+			'windspeed_kmh'          => '26',
+			'windspeed_mph'          => '16',
+			'wind'       => '16 mph 26 km/h from the North Northeast',
+			'updated'    => '11:50 AM Local on January 26, 2005',
+			'conditions' => 'Partly Cloudy',
+			'pressure'   => '30.21 in / 1023.0 hPa',
+			'humidity'   => '60',
+   		},
+		{
+			'place' => 'Heidelberg, KY',
+			
+			...
+			
+		},
+		{
+			'place' => 'Heidelberg, MS',
+			
+			...
+			
+		}
+	];
+
 
 =head1 SEE ALSO
 
-See also documentation of L<Weather::Com> and L<Weather::Cached>.
+See also documentation of L<Weather::Com> and L<Weather::Com::Cached>.
 
 =head1 AUTHOR
 

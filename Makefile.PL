@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
 	NAME    => 'Weather::Com',
-	VERSION => '0.1',            # sets $VERSION
+	VERSION => '0.2',            # sets $VERSION
 	PREREQ_PM => {
 				   XML::Simple    => "",
 				   URI::Escape    => "",
@@ -19,7 +19,7 @@ WriteMakefile(
 	   ?                         ## Add these new keywords supported since 5.005
 		 (
 		   ABSTRACT_FROM =>
-			 'lib/Weather/Com.pm',    # retrieve abstract from module
+			 'lib/Weather/Com.pod',    # retrieve abstract from module
 		   AUTHOR => 'Thomas Schnuecker <thomas@schnuecker.de>'
 		 )
 	   : ()

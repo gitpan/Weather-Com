@@ -1,26 +1,28 @@
-package Weather::Com;
-
-# $Revision: 1.5 $
+package Weather::Com::Base;
 
 use 5.006;
 use strict;
 use warnings;
+use Carp;
 use URI::Escape;
 use LWP::UserAgent;
+use HTTP::Request;
 use XML::Simple;
 use Data::Dumper;
 use Time::Local;
 
-require Exporter;
+use base qw(Exporter);
+our @EXPORT_OK =
+  qw ( celsius2fahrenheit fahrenheit2celsius convert_winddirection);
 
-our @ISA       = qw(Exporter);
-our @EXPORT_OK = qw ( celsius2fahrenheit fahrenheit2celsius convert_winddirection);
-our $VERSION   = "0.1";
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
 
 my $CITY_SEARCH_URI    = "http://xoap.weather.com/search/search?where=";
 my $WEATHER_SEARCH_URI = "http://xoap.weather.com/weather/local/";
 
 my %winddir = (
+				"none"			  => "none",
+				'N/A'             => "Not Available",
 				"VAR"             => "Variable",
 				"N"               => "North",
 				"NNW"             => "North Northwest",
@@ -38,6 +40,7 @@ my %winddir = (
 				"ENE"             => "East Northeast",
 				"NE"              => "Northeast",
 				"NNE"             => "North Northeast",
+				"Not Available"   => 'N/A',
 				"North"           => "N",
 				"North Northwest" => "NNW",
 				"Northwest"       => "NW",
@@ -88,26 +91,79 @@ sub new {
 		%parameters = @_;
 	}
 
-	# set attributes as in %parameters
-	$self->{PARTNER_ID} = $parameters{partner_id}
-	  if ( $parameters{partner_id} );
-	$self->{LICENSE_KEY} = $parameters{license} if ( $parameters{license} );
-	$self->{PROXY}       = $parameters{proxy}   if ( $parameters{proxy} );
-	$self->{TIMEOUT}     = $parameters{timeout} if ( $parameters{timeout} );
-	$self->{DEBUG}       = $parameters{debug}   if ( $parameters{debug} );
-	$self->{UNITS}       = $parameters{units}   if ( $parameters{units} );
-	$self->{CC}          = $parameters{current} if ( $parameters{current} );
-	$self->{LINKS}       = $parameters{links}   if ( $parameters{links} );
+	$self->{ARGS} = \%parameters;
 
-	# do some validity checking on the forecast value
-	# has to be between 0 and 10. we will ignore any other value
-	if ( $parameters{forecast} && ( $parameters{forecast} =~ /^[1]?\d$/ ) ) {
-		$self->{FORECAST} = $parameters{forecast};
-	}
-
+	# bless out object
 	bless( $self, $class );
 
-	$self->_debug( Dumper($self) );
+	# do some initialization with validity checking
+	$self = $self->_init( \%parameters );
+
+	# and some debugging output
+	$self->_debug( "Returning object: " . Dumper($self) );
+
+	return $self;
+}
+
+sub _init {
+	my $self   = shift;
+	my $params = $self->{ARGS};
+
+	# set proxy if param is set properly
+	if ( $params->{proxy} && ( lc( $params->{proxy} ) ne "none" ) ) {
+		unless ( $params->{proxy} =~ /^(http|HTTP)\:\/\// ) {
+			die ref($self)
+			  . ": 'proxy' parameter has to start with 'http://'!\n";
+		}
+		$self->{PROXY} = $params->{proxy};
+	}
+
+	# set proxy authentication data if param is set properly
+	if (    $params->{proxy_user}
+		 && $params->{proxy_pass}
+		 && ( lc( $params->{proxy_user} ) ne "none" ) )
+	{
+		$self->{PROXY_USER} = $params->{proxy_user};
+		$self->{PROXY_PASS} = $params->{proxy_pass};
+	}
+
+	# set timeout if it is a possitive integer or 0
+	if ( $params->{timeout} ) {
+		unless (    ( $params->{timout} =~ /^\d+$/ )
+				 && ( $params->{timeout} > -1 ) )
+		{
+			die ref($self)
+			  . ": 'timeout' parameter has to be a positive integer or 0!\n";
+		}
+		$self->{TIMEOUT} = $params->{timeout};
+	}
+
+	# set units of measure if set to 'm' or 's'
+	if ( $params->{units} ) {
+		unless ( lc( $params->{units} ) =~ /^m|s$/ ) {
+			die ref($self)
+			  . ": 'units' parameter has to be set to 'm' or 's'!\n";
+		}
+		$self->{UNITS} = $params->{units} if ( $params->{units} );
+
+	}
+
+	# forecast has to be between 0 and 10
+	if ( $params->{forecast} ) {
+		unless ( $params->{forecast} =~ /^[1]?\d$/ ) {
+			die ref($self)
+			  . ": 'forecast' parameter has to between 0 and 10!\n";
+		}
+		$self->{FORECAST} = $params->{forecast};
+	}
+
+	# set params that don't need to be checked
+	$self->{PARTNER_ID} = $params->{partner_id}
+	  if ( $params->{partner_id} );
+	$self->{LICENSE_KEY} = $params->{license} if ( $params->{license} );
+	$self->{DEBUG}       = $params->{debug}   if ( $params->{debug} );
+	$self->{CC}          = $params->{current} if ( $params->{current} );
+	$self->{LINKS}       = $params->{links}   if ( $params->{links} );
 
 	return $self;
 }
@@ -233,17 +289,24 @@ sub _getWebPage {
 	my $path = shift;
 
 	# instantiate a new user agent, with proxy if necessary
-	my $ua = LWP::UserAgent->new();
+	my $ua      = LWP::UserAgent->new();
+	my $request = HTTP::Request->new( "GET" => $path );
+
 	$ua->proxy( 'http', $self->{PROXY} )
-	  if ( $self->{PROXY} ne "none" );
+	  if ( lc( $self->{PROXY} ) ne "none" );
+	$request->proxy_authorization_basic( $self->{PROXY_USER},
+										 $self->{PROXY_PASS} )
+	  if ( lc( $self->{PROXY_USER} ) ne "none" );
 	$ua->timeout( $self->{TIMEOUT} );
 
 	# print some debugging info on the user agent object
-	$self->_debug("This is the user agent we wanna use...");
+	$self->_debug("This is the user agent we wanna use:");
 	$self->_debug( Dumper($ua) );
+	$self->_debug("Together with this request:");
+	$self->_debug( Dumper($request) );
 
 	# get the html page
-	my $response = $ua->get($path);
+	my $response = $ua->request($request);
 
 	# and do some error handling
 	my $html = undef;
@@ -267,7 +330,7 @@ sub _debug {
 	my $self   = shift;
 	my $notice = shift;
 	if ( $self->{DEBUG} ) {
-		warn ref($self) . " DEBUG NOTE: $notice\n";
+		carp ref($self) . " DEBUG NOTE: $notice\n";
 		return 1;
 	}
 	return 0;
@@ -342,6 +405,20 @@ sub _epoc2lsup {
 	return $lsup;
 }
 
+sub _simple2twentyfour {
+	my $stime   = shift;
+	my $colon   = index($stime, ":");
+	my $hour    = substr( $stime, 0, $colon );
+	my $minutes = substr( $stime, $colon + 1, 2 );
+	my $ampm    = substr( $stime, 6 );
+
+	if ( lc($ampm) =~ /PM/ ) {
+		return $hour + 12 . ":" . $minutes;    
+	} else {
+		return "$hour:$minutes";
+	}
+}
+
 #------------------------------------------------------------------------
 # wind direction conversion methods
 #------------------------------------------------------------------------
@@ -350,7 +427,6 @@ sub convert_winddirection {
 	return $winddir{$indir};
 }
 
-
 1;
 __END__
 
@@ -358,12 +434,12 @@ __END__
 
 =head1 NAME
 
-Weather::Com - Perl extension for getting weather information from weather.com
+Weather::Com::Base - Perl extension for getting weather information from weather.com
 
 =head1 SYNOPSIS
 
   use Data::Dumper;
-  use Weather::Com;
+  use Weather::Com::Base;
   
   # define parameters for weather search
   my %params = (
@@ -379,7 +455,7 @@ Weather::Com - Perl extension for getting weather information from weather.com
   );
   
   # instantiate a new weather.com object
-  my $weather_com = Weather::Com->new(%params);
+  my $weather_com = Weather::Com::Base->new(%params);
   
   # search for locations called 'Heidelberg'
   my $locations = $weather_com->search('Heidelberg')
@@ -393,27 +469,16 @@ Weather::Com - Perl extension for getting weather information from weather.com
 
 =head1 DESCRIPTION
 
-I<Weather::Com> is a Perl module that provides low level OO interface
+I<Weather::Com::Base> is a Perl module that provides low level OO interface
 to gather all weather information that is provided by I<weather.com>. 
 
 This module should not be used directly because of the business rules
 applying if one want's to use the I<weather.com>'s I<xoap> interface.
-These business rules enforce one to implement several caching rules.
+These business rules enforce you to implement several caching rules.
 
 Therefore, if you want to use a low level interface, please use
-I<Weather::Cached> instead. It has the same interface as this module
-but it implements all caching rules on it.
-
-For a more high level interface please have a look at I<Weather::Simple>
-that uses I<Weather::Cached> to get information and than provides the same
-simple API than I<Weather::Underground> does.
-
-As you'll see further below in this documentation, you'll need
-to register at I<weather.com> to  to get a free partner id
-and a license key to be used within all applications that you want to
-write against I<weather.com>'s I<xoap> interface. 
-
-L<http://www.weather.com/services/xmloap.html>
+I<Weather::Com::Cached> instead. It has the same interface as this module
+but it implements all caching rules of I<weather.com>.
 
 =head2 EXPORT
 
@@ -501,10 +566,24 @@ US (s) format.
 
 Defaults to 'm'.
 
-=item proxy => 'none' | 'http://some.proxy.de'
+=item proxy => 'none' | 'http://some.proxy.de:8080'
 
-Usually no proxy is used by the I<LWP::UserAgent> module used to communicate
+Usually no proxy is used by the L<LWP::UserAgent> module used to communicate
 with I<weather.com>. If you want to use an HTTP proxy you can specify one here.
+
+=item proxy_user => undef | 'myuser'
+
+If specified, this parameter is provided to the proxy for authentication
+purposes.
+
+Defaults to I<undef>.
+
+=item proxy_pass => undef | 'mypassword'
+
+If specified, this parameter is provided to the proxy for authentication
+purposes.
+
+Defaults to I<undef>.
 
 =item timeout => some integer (in seconds)
 
@@ -536,7 +615,7 @@ See I<partner_id>.
 
 =head2 search(place to search)
 
-Searches for all known location matching the provided parameter.
+Searches for all known locations matching the provided search string.
 
 At I<weather.com> you have to request weather data for a specific location.
 Therefor you first have to find the location id for the location you are
@@ -948,7 +1027,8 @@ detail here. Just play around with the sample...
 
 =head1 SEE ALSO
 
-See also documentation of L<Weather::Cached> and L<Weather::Simple>.
+See also L<Weather::Com::Cached> for the cached version of
+the low level API.
 
 =head1 AUTHOR
 
