@@ -1,4 +1,4 @@
-Weather-Com version 0.2
+Weather-Com version 0.3
 ========================
 
 Introduction:
@@ -47,7 +47,7 @@ This module consists of several parts:
 6. weather_ext.pl       - a sample console program using the new high level 
                           interface
 
-Usually you should always use one of the high level wrappers as parsing
+Usually you should always use one of the high level interfaces as parsing
 the hash structure returned by Weather::Com::Base and Weather::Com::Cached
 is not self-explanatory.
 
@@ -80,12 +80,13 @@ This module requires these other modules and libraries:
   - LWP::UserAgent
   - Storable
   - Time::Local
+  - Time::Format
   - XML::Simple
   - URI::Escape
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2004 by Thomas Schnuecker (thomas@schnuecker.de)
+Copyright (C) 2004-2005 by Thomas Schnuecker (thomas@schnuecker.de)
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

@@ -5,8 +5,10 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
-use Weather::Com::Base;
+use Weather::Com::Cached;
 use Weather::Com::Location;
+
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -27,7 +29,7 @@ sub new {
 	# god, bless the object
 	$self = bless( $self, $class );
 
-	# Weather::Com::Base object for searching
+	# Weather::Com::Cached object for searching
 	my %weatherargs = ();
 	
 	# define proxy args
@@ -48,7 +50,7 @@ sub new {
 
 	# initialize weather object
 	$self->{ARGS}    = \%weatherargs;
-	$self->{WEATHER} = Weather::Com::Base->new(%weatherargs);
+	$self->{WEATHER} = Weather::Com::Cached->new(%weatherargs);
 
 	return $self;
 }    # end new()
@@ -183,7 +185,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Thomas Schnuecker
+Copyright (C) 2004-2005 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

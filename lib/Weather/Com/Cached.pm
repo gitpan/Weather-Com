@@ -8,7 +8,7 @@ use Data::Dumper;
 use Weather::Com::Base;
 use base "Weather::Com::Base";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -51,6 +51,47 @@ sub new {
 }
 
 #------------------------------------------------------------------------
+# searching for location codes
+# Weather::Com::Cached will not search for location codes cached in
+# "locations.dat"
+#------------------------------------------------------------------------
+sub search {
+	my $self      = shift;
+	my $place     = shift;
+	my $locations = undef;
+
+	# set error and die if no place provided
+	unless ($place) {
+		die ref($self), ": ERROR Please provide a location to search for!\n";
+	}
+
+	# 1st, look for locations in cache
+	my $locations_cached = undef;
+	my $loccachefile = $self->{PATH} . "/locations.dat";
+	if ( -f $loccachefile ) {
+		$locations_cached = lock_retrieve($loccachefile);
+		if ( $locations_cached->{$place} ) {
+			$self->_debug("Found locations in location cache.");
+			$locations = $locations_cached->{$place};
+		}
+	}
+
+	# 2nd, if nothing has been found, search the Web and store data
+	unless ($locations) {
+		$locations = $self->SUPER::search($place);
+		if ( $locations) {
+			$self->_debug("Writing locations to cache.");
+			$locations_cached->{$place} = $locations;
+			unless (lock_store( $locations_cached, $loccachefile)  ) {
+				die ref($self), ": ERROR I/O problem while storing locations cachefile!";
+			}  
+		} 
+	}
+
+	return $locations;
+}
+
+#------------------------------------------------------------------------
 # getting data from weather.com
 #------------------------------------------------------------------------
 sub get_weather {
@@ -64,14 +105,12 @@ sub get_weather {
 	}
 
 	# try to load an existing cache file
+	my $cachefile    = $self->{PATH} . "/" . $self->{UNITS} . "_$locid.dat";
 	my $weathercache = {};
-	eval {
-		$weathercache =
-		  lock_retrieve( $self->{PATH} . "/" . $self->{UNITS} . "_$locid.dat" );
-	};
-	if ( $@ or !$weathercache ) {
+	if ( -f $cachefile ) {
+		$weathercache = lock_retrieve($cachefile);
+	} else {
 		$self->_debug("No cache file found.");
-		$weathercache = {};
 	}
 
 	# find out which data is wanted by the modules user and
@@ -141,7 +180,7 @@ sub get_weather {
 							$self->{PATH} . "/" . $self->{UNITS} . "_$locid.dat"
 				)
 		  )
-		{    
+		{
 			die ref($self), ": ERROR I/O problem while storing cachefile!";
 		}
 	}
@@ -193,7 +232,7 @@ sub _reset_params {
 sub _older_than {
 	my $self              = shift;
 	my $caching_timeframe = shift;
-	my $cached            = shift || 0 ;
+	my $cached            = shift || 0;
 	my $now               = time();
 
 	if ( $cached < ( $now - $caching_timeframe * 60 ) ) {
@@ -257,6 +296,13 @@ applications programmed against the I<xoap> API of I<weather.com>.
 Except from the I<cache> parameter to be used while instantiating a new
 object instance, this module has the same API than I<Weather::Com::Base>.
 It's only a simple caching wrapper around it.
+
+The caching mechanism for location searches is very simple. We assume
+that location codes on I<weather.com> will never change. Therefore,
+a search string that has been successfully used once to search for
+locations will never cause another search on the web. Each location
+search results will be stored in the file C<locations.dat>. If you
+want to refresh your locations cache, simply delete this file.
 
 Although it's really simple, the module uses I<Storable> methods 
 I<lock_store> and I<lock_retrieve> to implement shared locking for 

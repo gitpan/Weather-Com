@@ -4,11 +4,13 @@ use 5.006;
 use strict;
 use warnings;
 use Weather::Com::AirPressure;
+use Weather::Com::DateTime;
+use Weather::Com::Moon;
 use Weather::Com::UVIndex;
 use Weather::Com::Wind;
 use base "Weather::Com::Cached";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -21,7 +23,8 @@ sub new {
 	# parameters provided by new method
 	if ( ref( $_[0] ) eq "HASH" ) {
 		%parameters = %{ $_[0] };
-	} else {
+	}
+	else {
 		%parameters = @_;
 	}
 
@@ -40,10 +43,15 @@ sub new {
 	$self->{ID} = $parameters{location_id};
 
 	# getting first weather information
-	$self->{WEATHER} = $self->get_weather( $self->{ID} );
-	$self->{WIND}    = undef;
-	$self->{BAR}     = undef;
-	$self->{UV}      = undef;
+	$self->{BAR}             = undef;
+	$self->{UV}              = undef;
+	$self->{MOON}            = undef;
+	$self->{WEATHER}         = $self->get_weather( $self->{ID} );
+	$self->{WIND}            = undef;
+	$self->{LAST_XML_UPDATE} = undef;
+
+	# remember instantiation time (and later last update time)
+	$self->{LSUP} = time();
 
 	return $self;
 }    # end new()
@@ -53,7 +61,13 @@ sub new {
 #------------------------------------------------------------------------
 sub refresh {
 	my $self = shift;
-	$self->{WEATHER} = $self->get_weather( $self->{ID} );
+	my $now  = time();
+
+	# only refresh if last update has been more than 15 min ago
+	if ( ( $now - $self->{LSUP} ) > 900 ) {
+		$self->{WEATHER} = $self->get_weather( $self->{ID} );
+		$self->{LSUP}    = $now;
+	}
 	return 1;
 }
 
@@ -76,22 +90,10 @@ sub icon {
 	return $self->{WEATHER}->{cc}->{icon};
 }
 
-sub windchill {
+sub description {
 	my $self = shift;
 	$self->refresh();
-	return $self->{WEATHER}->{cc}->{flik};
-}
-
-sub observatory {
-	my $self = shift;
-	$self->refresh();
-	return $self->{WEATHER}->{cc}->{obst};
-}
-
-sub last_updated {
-	my $self = shift;
-	$self->refresh();
-	return $self->{WEATHER}->{cc}->{lsup};
+	return $self->{WEATHER}->{cc}->{t};
 }
 
 sub temperature {
@@ -100,21 +102,16 @@ sub temperature {
 	return $self->{WEATHER}->{cc}->{tmp};
 }
 
+sub windchill {
+	my $self = shift;
+	$self->refresh();
+	return $self->{WEATHER}->{cc}->{flik};
+}
+
 sub humidity {
 	my $self = shift;
 	$self->refresh();
 	return $self->{WEATHER}->{cc}->{hmid};
-}
-
-sub wind {
-	my $self = shift;
-	$self->refresh();
-
-	unless ( $self->{WIND} ) {
-		$self->{WIND} = Weather::Com::Wind->new();
-	}
-	$self->{WIND}->update( $self->{WEATHER}->{cc}->{wind} );
-	return $self->{WIND};
 }
 
 sub pressure {
@@ -124,7 +121,7 @@ sub pressure {
 	unless ( $self->{BAR} ) {
 		$self->{BAR} = Weather::Com::AirPressure->new();
 	}
-	$self->{BAR}->update( $self->{WEATHER}->{cc}->{bar} );    
+	$self->{BAR}->update( $self->{WEATHER}->{cc}->{bar} );
 	return $self->{BAR};
 }
 
@@ -132,6 +129,17 @@ sub dewpoint {
 	my $self = shift;
 	$self->refresh();
 	return $self->{WEATHER}->{cc}->{dewp};
+}
+
+sub moon {
+	my $self = shift;
+	$self->refresh();
+
+	unless ( $self->{MOON} ) {
+		$self->{MOON} = Weather::Com::Moon->new();
+	}
+	$self->{MOON}->update( $self->{WEATHER}->{cc}->{moon} );
+	return $self->{MOON};
 }
 
 sub uv_index {
@@ -151,10 +159,33 @@ sub visibility {
 	return $self->{WEATHER}->{cc}->{vis};
 }
 
-sub description {
+sub wind {
 	my $self = shift;
 	$self->refresh();
-	return $self->{WEATHER}->{cc}->{t};
+
+	unless ( $self->{WIND} ) {
+		$self->{WIND} = Weather::Com::Wind->new();
+	}
+	$self->{WIND}->update( $self->{WEATHER}->{cc}->{wind} );
+	return $self->{WIND};
+}
+
+sub observatory {
+	my $self = shift;
+	$self->refresh();
+	return $self->{WEATHER}->{cc}->{obst};
+}
+
+sub last_updated {
+	my $self = shift;
+	$self->refresh();
+
+	unless ( $self->{LAST_XML_UPDATE} ) {
+		$self->{LAST_XML_UPDATE} = Weather::Com::DateTime->new();
+	}
+
+	$self->{LAST_XML_UPDATE}->set_lsup( $self->{WEATHER}->{cc}->{lsup} );
+	return $self->{LAST_XML_UPDATE};
 }
 
 1;
@@ -249,10 +280,8 @@ after you've registered to get your license.
 
 =head2 last_updated()
 
-Returns the C<lsup> string as provided by I<weather.com>.
-
-This may change in the future to provide a more sensible
-time and date format...
+Returns a I<Weather::Com::DateTime> object containing the date and
+time of the last update as provided by I<weather.com>.
 
 =head2 observatory()
 
@@ -308,7 +337,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Thomas Schnuecker
+Copyright (C) 2004-2005 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

@@ -10,7 +10,7 @@ use strict;
 use Class::Struct;
 use Weather::Com::Base qw(convert_winddirection);
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # The wind class will not be a Weather::Cached class by itself, because
@@ -55,12 +55,14 @@ sub update {
 
 		# special rules apply if speed is non-numeric
 		$self->speed(0);
+		$self->maximum_gust(0);
 		$self->direction_degrees(-1);
 		$self->direction_short('N/A');
 	} else {
 
 		# else update object data
 		$self->speed( $wind{s} );
+		$self->maximum_gust($wind{gust});
 		$self->direction_degrees( $wind{d} );
 		$self->direction_short( $wind{t} );
 	}

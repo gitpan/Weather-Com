@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Revision: 1.10 $
+# $Revision: 1.11 $
 use strict;
 use Weather::Com::Simple;
 
@@ -102,7 +102,7 @@ __END__
 
 =head1 NAME
 
-weather.pl - Sample script to show the usage of the I<Weather::Simple>
+weather.pl - Sample script to show the usage of the I<Weather::Com::Simple>
 module
 
 =head1 SYNOPSIS
@@ -128,7 +128,7 @@ the script.
 
 The sample script I<weather.pl> asks you for a location name - either 
 a city or a 'city, region' or 'city, country' combination. It then uses 
-the I<Weather::Simple> module to get the current weather conditions 
+the I<Weather::Com::Simple> module to get the current weather conditions 
 for this location(s).
 
 If no location matching your input is found, a "no locations found" 
@@ -138,8 +138,8 @@ Else, the number of locations found is printed followed by nicely
 formatted weather data for each location.
 
 The command line parameter '-d' enables debugging mode (which is
-enabling debugging within all used packages (Weather::Simple,
-Weather::Cached, Weather::Com).
+enabling debugging within all used packages (Weather::Com::Simple,
+Weather::Com::Cached, Weather::Com::Base).
 
 =head1 AUTHOR
 
@@ -147,7 +147,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Thomas Schnuecker
+Copyright (C) 2004-2005 by Thomas Schnuecker
 
 This script is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

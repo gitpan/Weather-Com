@@ -15,13 +15,13 @@ use base qw(Exporter);
 our @EXPORT_OK =
   qw ( celsius2fahrenheit fahrenheit2celsius convert_winddirection);
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
 
 my $CITY_SEARCH_URI    = "http://xoap.weather.com/search/search?where=";
 my $WEATHER_SEARCH_URI = "http://xoap.weather.com/weather/local/";
 
 my %winddir = (
-				"none"			  => "none",
+				"none"            => "none",
 				'N/A'             => "Not Available",
 				"VAR"             => "Variable",
 				"N"               => "North",
@@ -219,7 +219,7 @@ sub search {
 
 	# XML::Simple behaves differently when one location is return than
 	# when more locations are returned ...
-	my $locations = {};
+	my $locations = undef;
 	if ( $simpleHash->{loc}->{content} ) {
 		$locations->{ $simpleHash->{loc}->{id} } =
 		  $simpleHash->{loc}->{content};
@@ -271,7 +271,10 @@ sub get_weather {
 	}
 
 	# parse weather data
-	my $simpleHash = XMLin($weatherXML);
+	my %options = (
+					ForceArray => ["day"],    
+	);
+	my $simpleHash = XMLin($weatherXML, %options);
 
 	# do some error handling if weather.com returns an error message
 	if ( $simpleHash->{err} ) {
@@ -407,13 +410,13 @@ sub _epoc2lsup {
 
 sub _simple2twentyfour {
 	my $stime   = shift;
-	my $colon   = index($stime, ":");
+	my $colon   = index( $stime, ":" );
 	my $hour    = substr( $stime, 0, $colon );
 	my $minutes = substr( $stime, $colon + 1, 2 );
 	my $ampm    = substr( $stime, 6 );
 
 	if ( lc($ampm) =~ /PM/ ) {
-		return $hour + 12 . ":" . $minutes;    
+		return $hour + 12 . ":" . $minutes;
 	} else {
 		return "$hour:$minutes";
 	}
@@ -712,10 +715,6 @@ I<weather.com>. The parts of the hashref are explained afterwards.
 	'dayf' => {
 		'lsup' => '8/16/04 12:17 PM Local Time',
 		'day'  => [	
-						# ATTENTION: This is only an array of hashes if
-						# there is more than 1 day forecasted. If only
-						# a 1 day forecast is requested, there's only a
-						# single hash. No array.
 			{
 				'hi'   => '27',
 				'suns' => '8:40 PM',

@@ -1,6 +1,6 @@
 package Weather::Com;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.8 $ =~ /(\d+)/g;
 
 1;
 
@@ -62,12 +62,11 @@ understand.
 
 The finder returns an arrayref or an array of locations (depending on 
 how you call the C<find()> method). Each location is an object of
-I<Weather::Com::Location>. The locations consist of location
-specific data, one I<Weather::Com::CurrentConditions> object and a
-I<Weather::Com::Units> object. 
+I<Weather::Com::Location>. 
 
-Forecast information (up to 10 days) will be available with the next 
-release.
+The locations consist of location specific data, 
+a I<Weather::Com::CurrentConditions> object, a I<Weather::Com::Forecast>
+object and a I<Weather::Com::Units> object. 
 
 =head2 Configuration parameters
 
@@ -214,6 +213,21 @@ its data is refreshed automatically if needed according to the caching rules.
 
 For detailed information about this class please refer to
 L<Weather::Com::CurrentConditions>.
+
+=head2 Weather::Com::Forecast
+
+Each location has a I<Weather::Com::Forecast> object to access weather
+forecasts. I<weather.com> provides up to 9 days of forecast - or 10 days
+if one wants to count day 0 which is I<today> in most cases.
+
+  my $forecast = $location->forecast();
+  print "Max. temperature tomorrow will be ", $forecast->day(1)->high(), "°C\n";
+
+Any time you call a method of your I<Weather::Com::Forecast> object, forecast data
+is updated if necessary.
+
+For detailed information about this class please refer to
+L<Weather::Com::Forecast>.
 
 =head2 Other classes
 

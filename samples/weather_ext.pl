@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Revision: 1.1 $
+# $Revision: 1.3 $
 use strict;
 use Weather::Com::Finder;
 use Data::Dumper;
@@ -89,14 +89,16 @@ while ( chomp( my $input = <STDIN> ) ) {
 		# print location data
 		print " * this city is located at: ", $location->latitude(), "deg N, ",
 		  $location->longitude(), "deg E\n";
-		print " * local time is ",               $location->localtime(), "\n";
-		print " * sunrise will be/has been at ", $location->sunrise(),   "\n";
+		print " * local time is ",               $location->localtime()->time(), "\n";
+		print " * sunrise will be/has been at ", $location->sunrise()->time(),   "\n";
 		print " * sunset (am/pm) will be/has been at ",
-		  $location->sunset_ampm(), "\n";
+		  $location->sunset()->time_ampm(), "\n";
 		print " * timezone is GMT + ", $location->timezone(), "hour(s)\n";
 
 		# current conditions
-		print "\nCurrent Conditions:\n";
+		print "\nCurrent Conditions (last update ",
+			$location->current_conditions()->last_updated()->time()," on ",
+			$location->current_conditions()->last_updated()->formatted('dd.mm.yyyy'),"):\n";
 		print " * current conditions are ",
 		  $location->current_conditions()->description(), ".\n";
 		print " * visibilty is about ",
@@ -112,7 +114,7 @@ while ( chomp( my $input = <STDIN> ) ) {
 
 		# all about wind
 		print " * wind speed is ",
-		  $location->current_conditions()->wind()->speed(), " $uospeed.\n";    
+		  $location->current_conditions()->wind()->speed(), " $uospeed.\n";
 		print " * wind comes from ",
 		  $location->current_conditions()->wind()->direction_long(), ".\n";
 		print "   ... in short ",
@@ -120,7 +122,8 @@ while ( chomp( my $input = <STDIN> ) ) {
 		print "   ... in degrees ",
 		  $location->current_conditions()->wind()->direction_degrees(), ".\n";
 		print "   ... max. gust ",
-		  $location->current_conditions()->wind()->maximum_gust(), " $uospeed.\n";
+		  $location->current_conditions()->wind()->maximum_gust(),
+		  " $uospeed.\n";
 
 		# all about uv index
 		print " * uv index is ",
@@ -130,9 +133,61 @@ while ( chomp( my $input = <STDIN> ) ) {
 
 		# all about barometric pressure
 		print " * air pressure is ",
-		  $location->current_conditions()->pressure()->pressure(), " $uopress.\n";
+		  $location->current_conditions()->pressure()->pressure(),
+		  " $uopress.\n";
 		print "   ... tendency ",
 		  $location->current_conditions()->pressure()->tendency(), ".\n";
+
+		# moon...
+		print " * moon phase is ",
+		  $location->current_conditions()->moon()->description(), "\n";
+
+		# forecasts
+		my $forecast = $location->forecast();
+		my $today    = $forecast->day(0);
+
+		print "Today:\n";
+		print "... day of week: ", $today->date()->weekday(), ", ",
+		  $today->date()->date(), "\n";    
+		if ( $today->high() ) {
+			print "... max temp:    ", $today->high(), "\n";
+		}
+		print "... min temp:    ", $today->low(), "\n";
+		print "... sunrise:     ", $today->sunrise()->time(), "\n";
+		print "... sunset:      ", $today->sunset()->time(),  "\n";
+
+		print "Daytime data:\n";
+		if ( $today->day() ) {
+			print "... conditions:     ", $today->day()->conditions(),    "\n";
+			print "... humidity:       ", $today->day()->humidity(),      "\n";
+			print "... precipitation:  ", $today->day()->precipitation(), "\n";
+			print "... wind speed:     ", $today->day()->wind()->speed(), "\n";
+			print "... max gust:       ", $today->day()->wind()->maximum_gust(),
+			  "\n";
+			print "... wind dir: ", $today->day()->wind()->direction_long(),
+			  "\n";
+			print "... wind dir: ", $today->day()->wind()->direction_degrees(),
+			  "\n";
+		}
+		print "Nightly data:\n";
+		print "... conditions:     ", $today->night()->conditions(),    "\n";
+		print "... humidity:       ", $today->night()->humidity(),      "\n";
+		print "... precipitation:  ", $today->night()->precipitation(), "\n";
+		print "... wind speed:     ", $today->night()->wind()->speed(), "\n";
+		print "... max gust:       ", $today->night()->wind()->maximum_gust(),
+		  "\n";
+		print "... wind dir: ", $today->night()->wind()->direction_long(), "\n";
+		print "... wind dir: ", $today->night()->wind()->direction_degrees(),
+		  "\n";
+
+		foreach my $day ( $forecast->all() ) {
+			print "Have forecast for ", $day->date()->weekday(), "\n";
+			print "Max Temp is ", $day->high(), "\n";
+			print "Min Temp is ", $day->low(),  "\n";
+			print "Percent chance of precipitation at night: ",
+			  $day->night()->precipitation(), "\%\n";
+			print "\n";
+		}
 
 		print "\n";
 	}
@@ -147,12 +202,11 @@ __END__
 
 =head1 NAME
 
-weather.pl - Sample script to show the usage of the I<Weather::Simple>
-module
+weather_ext.pl - Sample script to show the usage of the OO API of I<Weather::Com>
 
 =head1 SYNOPSIS
 
-  #> ./weather.pl [-d]
+  #> ./weather_ext.pl [-d]
   
   Welcome to Uncle Tom's weather station...
   
@@ -173,8 +227,8 @@ the script.
 
 The sample script I<weather.pl> asks you for a location name - either 
 a city or a 'city, region' or 'city, country' combination. It then uses 
-the I<Weather::Simple> module to get the current weather conditions 
-for this location(s).
+the I<Weather::Com> OO API to get location information, current weather
+conditions and 9 days of weahter forecast for this location(s).
 
 If no location matching your input is found, a "no locations found" 
 message is printed out.
@@ -183,8 +237,7 @@ Else, the number of locations found is printed followed by nicely
 formatted weather data for each location.
 
 The command line parameter '-d' enables debugging mode (which is
-enabling debugging within all used packages (Weather::Simple,
-Weather::Cached, Weather::Com).
+enabling debugging within all used packages.
 
 =head1 AUTHOR
 
@@ -192,7 +245,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Thomas Schnuecker
+Copyright (C) 2004-2005 by Thomas Schnuecker
 
 This script is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

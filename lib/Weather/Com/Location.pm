@@ -3,15 +3,15 @@ package Weather::Com::Location;
 use 5.006;
 use strict;
 use warnings;
+use Carp;
 use Time::Local;
 use Weather::Com::Cached;
 use Weather::Com::Units;
 use Weather::Com::CurrentConditions;
-
-#use Weather::Com::Forecast;
+use Weather::Com::Forecast;
 use base "Weather::Com::Cached";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -24,7 +24,8 @@ sub new {
 	# parameters provided by new method
 	if ( ref( $_[0] ) eq "HASH" ) {
 		%parameters = %{ $_[0] };
-	} else {
+	}
+	else {
 		%parameters = @_;
 	}
 
@@ -51,6 +52,9 @@ sub new {
 	$self->{WEATHER}    = undef;
 	$self->{CONDITIONS} = undef;
 	$self->{FORECAST}   = undef;
+	$self->{LOCALTIME}  = undef;
+	$self->{SUNRISE}    = undef;
+	$self->{SUNSET}     = undef;
 
 	# last update will be used to trigger automatic refresh of
 	# location data
@@ -67,10 +71,9 @@ sub new {
 # this calls refresh if weather data is not initialized yet
 sub refresh {
 	my $self = shift;
-	unless ( $self->{WEATHER} ) {
-		$self->_debug("Refreshing weather information...");
+	if ( !$self->{WEATHER} || $self->_update() ) {
 		$self->{WEATHER} = $self->get_weather( $self->{ID} );
-		$self->{LSUP}    = time();
+		$self->_debug("Weather data refreshed!");
 	}
 	return 1;
 }
@@ -96,7 +99,7 @@ sub units {
 	unless ( $self->{HEAD} ) {
 		$self->{HEAD} = Weather::Com::Units->new();
 	}
-	$self->{HEAD}->update( $self->{WEATHER}->{head} );	
+	$self->{HEAD}->update( $self->{WEATHER}->{head} );
 	return $self->{HEAD};
 }
 
@@ -118,62 +121,94 @@ sub longitude {
 	return $self->{WEATHER}->{loc}->{lon};
 }
 
-sub sunrise {
-	my $self = shift;
-	$self->refresh();
-	$self->_update();
-	my $sunr = $self->{WEATHER}->{loc}->{sunr};
-	return &Weather::Com::Base::_simple2twentyfour($sunr);
-}
-
-sub sunrise_ampm {
-	my $self = shift;
-	$self->refresh();
-	$self->_update();
-	return $self->{WEATHER}->{loc}->{sunr};
-}
-
-sub sunset {
-	my $self = shift;
-	$self->refresh();
-	$self->_update();
-	my $suns = $self->{WEATHER}->{loc}->{suns};
-	return &Weather::Com::Base::_simple2twentyfour($suns);
-}
-
-sub sunset_ampm {
-	my $self = shift;
-	$self->refresh();
-	$self->_update();
-	return $self->{WEATHER}->{loc}->{suns};
-}
-
 # localtime will be calculated because it does not make
 # any sense to used a cached time as current local time of
 # some location
 sub localtime {
 	my $self = shift;
-	my @gm   = gmtime( $self->_local_epoc( time() ) );
-	return "$gm[2]:$gm[1]";
+	$self->refresh();
+
+	unless ( $self->{LOCALTIME} ) {
+		$self->{LOCALTIME} = Weather::Com::DateTime->new();
+	}
+
+	$self->{LOCALTIME}->epoc( $self->_local_epoc( time() ) );
+	return $self->{LOCALTIME};
 }
 
 sub localtime_ampm {
-	my $self = shift;
-	my @gm   = gmtime( $self->_local_epoc( time() ) );
-	my $ampm = "AM";
+	carp("Use of deprecated method 'localtime_ampm()'!");
+	carp("Please use 'localtime()->time_ampm()' instead.");
 
-	# and we have to find out weather we wanna print AM or PM
-	# and then substract 12 hours if it's afternoon
-	if ( $gm[2] > 12 ) {
-		$gm[2] -= 12;
-		$ampm = "PM";
+	my $self = shift;
+	$self->refresh();
+
+	unless ( $self->{LOCALTIME} ) {
+		$self->{LOCALTIME} = Weather::Com::DateTime->new();
 	}
 
-	return "$gm[2]:$gm[1] $ampm";
+	$self->{LOCALTIME}->epoc( $self->_local_epoc( time() ) );
+	return $self->{LOCALTIME}->time_ampm();
+}
+
+sub sunrise {
+	my $self = shift;
+	$self->refresh();
+
+	unless ( $self->{SUNRISE} ) {
+		$self->{SUNRISE} = Weather::Com::DateTime->new();
+	}
+
+	$self->{SUNRISE}->set_time( $self->{WEATHER}->{loc}->{sunr} );
+	return $self->{SUNRISE};
+}
+
+sub sunrise_ampm {
+	carp("Use of deprecated method 'sunrise_ampm()'!");
+	carp("Please use 'sunrise()->time_ampm()' instead.");
+
+	my $self = shift;
+	$self->refresh();
+
+	unless ( $self->{SUNRISE} ) {
+		$self->{SUNRISE} = Weather::Com::DateTime->new();
+	}
+
+	$self->{SUNRISE}->set_time( $self->{WEATHER}->{loc}->{sunr} );
+	return $self->{SUNRISE}->time_ampm();
+}
+
+sub sunset {
+	my $self = shift;
+	$self->refresh();
+
+	unless ( $self->{SUNSET} ) {
+		$self->{SUNSET} = Weather::Com::DateTime->new();
+	}
+
+	$self->{SUNSET}->set_time( $self->{WEATHER}->{loc}->{suns} );
+	return $self->{SUNSET};
+}
+
+sub sunset_ampm {
+	carp("Use of deprecated method 'sunset_ampm()'!");
+	carp("Please use 'sunset()->time_ampm()' instead.");    
+
+	my $self = shift;
+	$self->refresh();
+
+	unless ( $self->{SUNSET} ) {
+		$self->{SUNSET} = Weather::Com::DateTime->new();
+	}
+
+	$self->{SUNSET}->set_time( $self->{WEATHER}->{loc}->{suns} );
+	return $self->{SUNSET}->time_ampm();
 }
 
 sub current_conditions {
 	my $self = shift;
+	$self->refresh();
+
 	unless ( $self->{CONDITIONS} ) {
 		$self->{CONDITIONS} =
 		  Weather::Com::CurrentConditions->new( $self->{ARGS} );
@@ -183,6 +218,8 @@ sub current_conditions {
 
 sub forecast {
 	my $self = shift;
+	$self->refresh();
+
 	unless ( $self->{FORECAST} ) {
 		$self->{FORECAST} = Weather::Com::Forecast->new( $self->{ARGS} );
 	}
@@ -216,14 +253,16 @@ sub _update {
 
 	if ( $local_epoc_now > $local_epoc_lsup ) {
 		$self->_debug("refreshing location cache...\n");
-		$self->refresh();
+		return 1;
 	}
+
+	return 0;
 }
 
 sub _local_epoc {
 	my $self = shift;
 	my $time = shift;
-	return ( $time + ( $self->timezone() * 3600 ) );
+	return ( $time + ( $self->{WEATHER}->{loc}->{zone} * 3600 ) );
 }
 
 1;
@@ -262,8 +301,8 @@ Weather::Com::Location - class representing one location and its weather
     print "Found weather for city: ", $location->name(), "\n";
     print "The city is located at: ", $location->latitude(), "deg N, ",
 		  $location->longitude(), "deg E\n";
-	print "Local time is ", $location->localtime(), "\n";
-	print "Sunrise will be/has been at ", $location->sunrise(), "\n";
+	print "Local time is ", $location->localtime()->time(), "\n";
+	print "Sunrise will be/has been at ", $location->sunrise()->time(), "\n";
     
   }
 
@@ -316,12 +355,9 @@ details.
 
 =head2 forecast() 
 
-I<not implemented yet, comming soon>
-
 Returns a I<Weather::Com::Forecast> object.
 
-Please refer to L<Weather::Com::Forecast> for further
-details.
+Please refer to L<Weather::Com::Forecast> for further details.
 
 =head2 latitude()
 
@@ -333,24 +369,18 @@ Returns the longitude of the location.
 
 =head2 localtime()
 
-Returns the local time of the location.
+Returns a Weather::Com::DateTime object containing the local time
+of the location.
 
 This value is evaluated each time you call this method. We do not use
 the value returned from I<weather.com> here because it does not make
 any sence to use a cached value to show the current time.
-
-The time is returned in the format C<hh:mm> where C<hh> is in 24 hour format.
-To get a 12 hour format use C<localtime_ampm> instead.
-
-  Sample: 14:34
 
 =head2 localtime_ampm()
 
-Returns the local time of the location.
+B<This method is deprecated and will be removed with the next release!>
 
-This value is evaluated each time you call this method. We do not use
-the value returned from I<weather.com> here because it does not make
-any sence to use a cached value to show the current time.
+Returns the local time of the location.
 
 The time is returned in the format C<hh:mm [AM|PM]>.
 To get a 24 hour format use C<localtime> instead.
@@ -359,18 +389,22 @@ To get a 24 hour format use C<localtime> instead.
 
 =head2 sunrise()
 
-Returns the time of sunrise in 24 hour format.
+Returns a Weather::Com::DateTime object containing the time of sunrise.
 
 =head2 sunrise_ampm()
+
+B<This method is deprecated and will be removed with the next release!>
 
 Returns the time of sunrise in 12 hour format (see C<localtime_ampm()>
 for details).
 
 =head2 sunset()
 
-Returns the time of sunset in 24 hour format.
+Returns a Weather::Com::DateTime object containing the time of sunset.
 
 =head2 sunset_ampm()
+
+B<This method is deprecated and will be removed with the next release!>
 
 Returns the time of sunset in 12 hour format (see C<localtime_ampm()>
 for details).
@@ -398,7 +432,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Thomas Schnuecker
+Copyright (C) 2004-2005 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

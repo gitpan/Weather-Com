@@ -1,6 +1,5 @@
 Following things have to be done next...
 
- * finish Weather::Com::Forecast
  * scan some more locations for special information 
    (e.g. water temperature for coastal locations)
  * do more testing
