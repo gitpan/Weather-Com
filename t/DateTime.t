@@ -1,10 +1,18 @@
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl Weather-Com.t'
-
-#########################
-
-# change 'tests => 1' to 'tests => last_test_to_print';
-
+#####################################################################
+#
+#  Test suite for 'Weather::Com::Simple'
+#
+#  Functional tests with 'Test::MockObject'. These could only be run
+#  if Test::MockObject is installed.
+#
+#  Before `make install' is performed this script should be runnable
+#  with `make test'. After `make install' it should work as
+#  `perl t/Simple.t'
+#
+#####################################################################
+#
+# initialization
+#
 use Test::More tests => 10;
 BEGIN { 
 	use_ok('Weather::Com::DateTime');
@@ -12,8 +20,10 @@ BEGIN {
 
 my $testtime = 1109430000;
 
-#########################
-
+#####################################################################
+#
+# Testing object instantiation (do we use the right class)?
+#
 my $wc = Weather::Com::DateTime->new(-6);
 $wc->set_lsup('02/25/05 11:21 PM Local Time');
 

@@ -3,24 +3,34 @@ package Weather::Com::AirPressure;
 use 5.006;
 use strict;
 use warnings;
-use Class::Struct;
+use Weather::Com::L10N;
+use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
-# The pressure class will not be a Weather::Cached class by itself,
-# because then it would not be easy to now whether it is current
-# conditions pressure or forecast pressure and if forecast pressure,
-# then of which day, etc.
-#
-# Weather::Com::AirPressure consists almost only of pure data and no
-# significant logic has to be build in. Therefore, we simply use a
-# Class::Struct subclass.
+# Constructor
 #------------------------------------------------------------------------
-struct(
-		pressure => '$',
-		tendency => '$',    
-);
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my %parameters;
+
+	# parameters provided by new method
+	if ( ref( $_[0] ) eq "HASH" ) {
+		%parameters = %{ $_[0] };
+	} else {
+		%parameters = @_;
+	}
+
+	my $self = $class->SUPER::new( \%parameters );
+
+	# getting first weather information
+	$self->{PRESSURE} = -1;    
+	$self->{TENDENCY} = 'unknown';
+
+	return $self;
+}    # end new()
 
 #------------------------------------------------------------------------
 # update barometric data
@@ -36,14 +46,30 @@ sub update {
 	}
 
 	unless ( $bar{r} ) {
-		$self->pressure(-1);
-		$self->tendency("unknown");
+		$self->{PRESSURE} = -1;
 	} else {
-		$self->pressure($bar{r});
-		$self->tendency($bar{t});
+		$self->{PRESSURE} = lc($bar{r});
+	}
+	unless ( $bar{d} ) {
+		$self->{TENDENCY} = "unknown";
+	} else {
+		$self->{TENDENCY} = lc($bar{d});
 	}
 
 	return 1;
+}
+
+#------------------------------------------------------------------------
+# access moon data
+#------------------------------------------------------------------------
+sub pressure {
+	my $self = shift;
+	return $self->{PRESSURE};
+}
+
+sub tendency {
+	my $self = shift;
+	return $self->{LH}->maketext($self->{TENDENCY});
 }
 
 1;

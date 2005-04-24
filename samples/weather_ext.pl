@@ -1,13 +1,13 @@
 #!/usr/bin/perl
-# $Revision: 1.4 $
+# $Revision: 1.5 $
 use strict;
+use warnings;
 use Weather::Com::Finder;
-use Data::Dumper;
 
 $| = 1;
 
 # have a cvs driven version...
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
 
 # you have to fill in your ids from weather.com here
 my $PartnerId  = '';
@@ -16,6 +16,7 @@ my $LicenseKey = '';
 # you can preset units of messures here
 # (m for metric (default), s for us)
 my $units = 'm';
+my $language = 'de';
 
 # if you need a proxy... maybe with authentication
 my $Proxy      = '';
@@ -37,6 +38,7 @@ my %weatherargs = (
 					'proxy'      => $Proxy,
 					'proxy_user' => $Proxy_User,
 					'proxy_pass' => $Proxy_Pass,
+					'language'   => $language,
 );
 
 my $weather_finder = Weather::Com::Finder->new(%weatherargs);
@@ -103,8 +105,7 @@ while ( chomp( my $input = <STDIN> ) ) {
 		# current conditions
 		print "\nCurrent Conditions (last update ",
 		  $location->current_conditions()->last_updated()->time(), " on ",
-		  $location->current_conditions()->last_updated()
-		  ->formatted('dd.mm.yyyy'), "):\n";
+		  $location->current_conditions()->last_updated()->formatted('dd.mm.yyyy'), "):\n";
 		print " * current conditions are ",
 		  $location->current_conditions()->description(), ".\n";
 		print " * visibilty is about ",

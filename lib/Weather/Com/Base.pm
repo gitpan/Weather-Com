@@ -11,11 +11,13 @@ use XML::Simple;
 use Data::Dumper;
 use Time::Local;
 
+use Weather::Com::L10N;
+
 use base qw(Exporter);
 our @EXPORT_OK =
   qw ( celsius2fahrenheit fahrenheit2celsius convert_winddirection);
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
 
 my $CITY_SEARCH_URI    = "http://xoap.weather.com/search/search?where=";
 my $WEATHER_SEARCH_URI = "http://xoap.weather.com/weather/local/";
@@ -165,6 +167,13 @@ sub _init {
 	$self->{CC}          = $params->{current} if ( $params->{current} );
 	$self->{LINKS}       = $params->{links}   if ( $params->{links} );
 
+	if ( $params->{lang} ) {
+		$self->{LH} = Weather::Com::L10N->get_handle( $params->{lang} )
+		  or croak("Language?");
+	} else {
+		$self->{LH} = Weather::Com::L10N->get_handle('en_US');
+	}
+
 	return $self;
 }
 
@@ -280,6 +289,8 @@ sub get_weather {
 	if ( $simpleHash->{err} ) {
 		die ref($self), ": ERROR ", $simpleHash->{err}->{content}, "\n";
 	}
+
+	$self->_debug(Dumper($simpleHash));
 
 	return $simpleHash;
 }

@@ -2,24 +2,42 @@ package Weather::Com::DayForecast;
 
 use 5.006;
 use strict;
-use Class::Struct;
+use warnings;
+use Weather::Com::L10N;
 use Weather::Com::DayPart;
 use Weather::Com::DateTime;
+use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
-# Class::Struct subclass.
+# Constructor
 #------------------------------------------------------------------------
-struct(
-	date    => 'Weather::Com::DateTime',
-	high    => '$',
-	low     => '$',
-	sunrise => 'Weather::Com::DateTime',
-	sunset  => 'Weather::Com::DateTime',
-	day     => 'Weather::Com::DayPart',
-	night   => 'Weather::Com::DayPart',
-);
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my %parameters;
+
+	# parameters provided by new method
+	if ( ref( $_[0] ) eq "HASH" ) {
+		%parameters = %{ $_[0] };
+	} else {
+		%parameters = @_;
+	}
+
+	my $self = $class->SUPER::new( \%parameters );
+
+	# getting first weather information
+	$self->{DATE}    = undef;
+	$self->{HIGH}    = 'N/A';
+	$self->{LOW}     = 'N/A';
+	$self->{SUNRISE} = undef;
+	$self->{SUNSET}  = undef;
+	$self->{DAY}     = undef;
+	$self->{NIGHT}   = undef;
+
+	return $self;
+}    # end new()
 
 #------------------------------------------------------------------------
 # update data
@@ -30,16 +48,15 @@ sub update {
 
 	if ( ref( $_[0] ) eq "HASH" ) {
 		%day = %{ $_[0] };
-	}
-	else {
+	} else {
 		%day = @_;
 	}
 
 	# update date and time data
 	unless ( $self->date() ) {
-		$self->date( Weather::Com::DateTime->new( $day{zone} ) );
-		$self->sunrise( Weather::Com::DateTime->new( $day{zone} ) );
-		$self->sunset( Weather::Com::DateTime->new( $day{zone} ) );
+		$self->{DATE}    = Weather::Com::DateTime->new( $day{zone} );
+		$self->{SUNRISE} = Weather::Com::DateTime->new( $day{zone} );
+		$self->{SUNSET}  = Weather::Com::DateTime->new( $day{zone} );
 	}
 
 	$self->date()->set_date( $day{dt} );
@@ -49,31 +66,67 @@ sub update {
 	# update weather data
 	# if $day{hi} eq "N/A" then there is no daytime forecast
 	unless ( $day{hi} eq 'N/A' ) {
-		$self->high( $day{hi} );
+		$self->{HIGH} = $day{hi};
+	} else {
+		$self->{HIGH} = 'N/A';
 	}
-	else {
-		$self->high('N/A');
-	}    
-	$self->low( $day{low} );
+	$self->{LOW} = $day{low};
 
 	foreach my $daypart ( @{ $day{part} } ) {
 		if ( $daypart->{p} eq 'd' ) {
 
 			# if $day{hi} eq "N/A" then there is no daytime forecast
 			if ( $day{hi} ne 'N/A' ) {
-				unless ( $self->day() ) {
-					$self->day( Weather::Com::DayPart->new() );
+				unless ( $self->{DAY} ) {    
+					$self->{DAY} = Weather::Com::DayPart->new( $self->{ARGS} );
 				}
 				$self->day()->update($daypart);
 			}
-		}
-		else {
-			unless ( $self->night() ) {
-				$self->night( Weather::Com::DayPart->new() );
+		} else {
+			unless ( $self->{NIGHT} ) {
+				$self->{NIGHT} = Weather::Com::DayPart->new( $self->{ARGS} );
 			}
 			$self->night()->update($daypart);
 		}
 	}
+}
+
+#------------------------------------------------------------------------
+# access data
+#------------------------------------------------------------------------
+sub date {
+	my $self = shift;
+	return $self->{DATE};
+}
+
+sub high {
+	my $self = shift;
+	return $self->{HIGH};
+}
+
+sub low {
+	my $self = shift;
+	return $self->{LOW};
+}
+
+sub sunrise {
+	my $self = shift;
+	return $self->{SUNRISE};
+}
+
+sub sunset {
+	my $self = shift;
+	return $self->{SUNSET};
+}
+
+sub day {
+	my $self = shift;
+	return $self->{DAY};
+}
+
+sub night {
+	my $self = shift;
+	return $self->{NIGHT};
 }
 
 1;

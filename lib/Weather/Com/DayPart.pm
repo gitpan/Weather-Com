@@ -3,22 +3,39 @@ package Weather::Com::DayPart;
 use 5.006;
 use strict;
 use Carp;
-use Class::Struct;
+use Weather::Com::L10N;
 use Weather::Com::Wind;
+use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
-# Class::Struct subclass.
+# Constructor
 #------------------------------------------------------------------------
-struct(
-	type          => '$',
-	conditions    => '$',
-	humidity      => '$',
-	icon          => '$',
-	precipitation => '$',
-	wind          => 'Weather::Com::Wind',
-);
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my %parameters;
+
+	# parameters provided by new method
+	if ( ref( $_[0] ) eq "HASH" ) {
+		%parameters = %{ $_[0] };
+	} else {
+		%parameters = @_;
+	}
+
+	my $self = $class->SUPER::new( \%parameters );
+
+	# getting first weather information
+	$self->{TYPE}          = undef;
+	$self->{CONDITIONS}    = 'N/A';
+	$self->{HUMIDITY}      = 'N/A';
+	$self->{ICON}          = undef;
+	$self->{PRECIPITATION} = undef;
+	$self->{WIND}          = undef;
+
+	return $self;
+}    # end new()
 
 #------------------------------------------------------------------------
 # update data
@@ -29,30 +46,61 @@ sub update {
 
 	if ( ref( $_[0] ) eq "HASH" ) {
 		%daypart = %{ $_[0] };
-	}
-	else {
+	} else {
 		%daypart = @_;
 	}
 
 	if ( $daypart{p} eq "d" ) {
-		$self->type("day");
-	}
-	else {
-		$self->type("night");
+		$self->{TYPE} = "day";
+	} else {
+		$self->{TYPE} = "night";
 	}
 
-	$self->conditions( $daypart{t} );
-	$self->humidity( $daypart{hmid} );
-	$self->icon( $daypart{icon} );
-	$self->precipitation( $daypart{ppcp} );
+	$self->{CONDITIONS}    = $daypart{t};
+	$self->{HUMIDITY}      = $daypart{hmid};
+	$self->{ICON}          = $daypart{icon};
+	$self->{PRECIPITATION} = $daypart{ppcp};
 
-	unless ( $self->wind() ) {
-		$self->wind( Weather::Com::Wind->new() );
+	unless ( $self->{WIND} ) {
+		$self->{WIND} = Weather::Com::Wind->new( $self->{ARGS} );
 	}
 
 	$self->wind()->update( $daypart{wind} );
 
 	return 1;
+}
+
+#------------------------------------------------------------------------
+# access data
+#------------------------------------------------------------------------
+sub type {
+	my $self = shift;
+	return $self->{LH}->maketext( $self->{TYPE} );    
+}
+
+sub conditions {
+	my $self = shift;
+	return $self->{LH}->maketext( lc($self->{CONDITIONS}) );
+}
+
+sub humidity {
+	my $self = shift;
+	return $self->{HUMIDITY};
+}
+
+sub icon {
+	my $self = shift;
+	return $self->{ICON};
+}
+
+sub precipitation {
+	my $self = shift;
+	return $self->{PRECIPITATION};
+}
+
+sub wind {
+	my $self = shift;
+	return $self->{WIND};
 }
 
 1;

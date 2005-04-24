@@ -8,9 +8,10 @@ use Weather::Com::DateTime;
 use Weather::Com::Moon;
 use Weather::Com::UVIndex;
 use Weather::Com::Wind;
+use Weather::Com::L10N;
 use base "Weather::Com::Cached";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.10 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -23,8 +24,7 @@ sub new {
 	# parameters provided by new method
 	if ( ref( $_[0] ) eq "HASH" ) {
 		%parameters = %{ $_[0] };
-	}
-	else {
+	} else {
 		%parameters = @_;
 	}
 
@@ -93,7 +93,8 @@ sub icon {
 sub description {
 	my $self = shift;
 	$self->refresh();
-	return $self->{WEATHER}->{cc}->{t};
+	return $self->{LH}->maketext( lc($self->{WEATHER}->{cc}->{t}) );    
+
 }
 
 sub temperature {
@@ -136,7 +137,7 @@ sub moon {
 	$self->refresh();
 
 	unless ( $self->{MOON} ) {
-		$self->{MOON} = Weather::Com::Moon->new();
+		$self->{MOON} = Weather::Com::Moon->new( $self->{ARGS} );
 	}
 	$self->{MOON}->update( $self->{WEATHER}->{cc}->{moon} );
 	return $self->{MOON};
@@ -147,7 +148,7 @@ sub uv_index {
 	$self->refresh();
 
 	unless ( $self->{UV} ) {
-		$self->{UV} = Weather::Com::UVIndex->new();
+		$self->{UV} = Weather::Com::UVIndex->new( $self->{ARGS} );
 	}
 	$self->{UV}->update( $self->{WEATHER}->{cc}->{uv} );
 	return $self->{UV};
@@ -164,7 +165,7 @@ sub wind {
 	$self->refresh();
 
 	unless ( $self->{WIND} ) {
-		$self->{WIND} = Weather::Com::Wind->new();
+		$self->{WIND} = Weather::Com::Wind->new( $self->{ARGS} );
 	}
 	$self->{WIND}->update( $self->{WEATHER}->{cc}->{wind} );
 	return $self->{WIND};
@@ -181,7 +182,8 @@ sub last_updated {
 	$self->refresh();
 
 	unless ( $self->{LAST_XML_UPDATE} ) {
-		$self->{LAST_XML_UPDATE} = Weather::Com::DateTime->new($self->{ARGS}->{zone});
+		$self->{LAST_XML_UPDATE} =
+		  Weather::Com::DateTime->new( $self->{ARGS}->{zone} );
 	}
 
 	$self->{LAST_XML_UPDATE}->set_lsup( $self->{WEATHER}->{cc}->{lsup} );
@@ -210,6 +212,7 @@ Weather::Com::CurrentConditions - class containing current weather conditions
   my %weatherargs = (
 	'partner_id' => $PartnerId,
 	'license'    => $LicenseKey,
+	'language'   => 'de',
   );
 
   my $finder = Weather::Com::Finder->new(%weatherargs);
@@ -262,6 +265,9 @@ Returns the name of the location this current conditions belong to.
 =head2 description()
 
 Returns a textual representation of the current weather conditions.
+
+This description is translated if you specified the I<language> option
+as argument for your I<Weather::Com::Finder>.
 
 =head2 dewpoint() 
 

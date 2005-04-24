@@ -3,27 +3,37 @@ package Weather::Com::Moon;
 use 5.006;
 use strict;
 use warnings;
-use Class::Struct;
+use Weather::Com::L10N;
+use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.1 $ =~ /(\d+)/g;
-
-#------------------------------------------------------------------------
-# The moon class will not be a Weather::Cached class by itself,
-# because then it would not be easy to know whether it is current
-# conditions moon data or forecast moon and if forecast moon data,
-# then of which day, etc.
-#
-# Weather::Com::Moon consists almost only of pure data and no
-# significant logic has to be build in. Therefore, we simply use a
-# Class::Struct subclass.
-#------------------------------------------------------------------------
-struct(
-		icon        => '$',
-		description => '$',    
-);
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
-# update barometric data
+# Constructor
+#------------------------------------------------------------------------
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my %parameters;
+
+	# parameters provided by new method
+	if ( ref( $_[0] ) eq "HASH" ) {
+		%parameters = %{ $_[0] };
+	} else {
+		%parameters = @_;
+	}
+
+	my $self = $class->SUPER::new( \%parameters );
+
+	# getting first weather information
+	$self->{ICON}        = undef;
+	$self->{DESCRIPTION} = '';
+
+	return $self;
+}    # end new()
+
+#------------------------------------------------------------------------
+# update moon data
 #------------------------------------------------------------------------
 sub update {
 	my $self = shift;
@@ -35,10 +45,23 @@ sub update {
 		%moon = @_;
 	}
 
-	$self->icon($moon{icon});
-	$self->description($moon{t});
+	$self->{ICON}        = $moon{icon};
+	$self->{DESCRIPTION} = lc($moon{t});
 
 	return 1;
+}
+
+#------------------------------------------------------------------------
+# access moon data
+#------------------------------------------------------------------------
+sub icon {
+	my $self = shift;
+	return $self->{ICON};
+}
+
+sub description {
+	my $self = shift;
+	return $self->{LH}->maketext(lc($self->{DESCRIPTION}));
 }
 
 1;
@@ -63,6 +86,7 @@ Weather::Com::Moon - class containing moon phase information
   my %weatherargs = (
 	'partner_id' => $PartnerId,
 	'license'    => $LicenseKey,
+	'language'   => 'de',
   );
 
   my $weather_finder = Weather::Com::Finder->new(%weatherargs);
@@ -93,6 +117,9 @@ of one current conditions or forecast object.
 =head2 description()
 
 Returns a textual description of the current moon phase.
+
+This description is translated if you specified the I<language>
+option for you I<Weather::Com::Finder>.
 
 =head2 icon()
 

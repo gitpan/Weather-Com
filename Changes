@@ -1,5 +1,26 @@
 Revision history for Perl extension Weather::Com.
 
+0.4 Sun Apr 24 16:00 2005
+    - moved to 'Locale::Maketext' for L10N
+    - reworked all tests, now using Test::MockObject to be able to run
+      all tests even without a network connection
+    - developed a bunch of new tests
+    - fixed some minor bugs
+
+0.4_pre2 Tue Apr 14 23:50 2005
+    - reworked the locations cache mechnism to make it case insensitive
+    - reworked the locations cache to use not only the search string as
+      key but also the name of each location found
+      (see CHANGES section of Weather::Com::Cached POD for details)
+    - reworked locations search (see Weather::Com::Cached POD for details)
+
+0.4_pre1 Sat Apr 09 15:30 2005
+    - introducing I18n package to translate weather conditions, uv indices,
+      moon phases and directions (North, South, etc.) into:
+        * English
+        * German
+    - fixed bug: AirPressure->tendency() did never return a valid value
+    
 0.3.1 Tue Mar 01 00:30 2005
     - Fixed Bug [11720]: The new Weather::Com::DateTime objects seemed to work 
       properly only in Germany (home of author)?!?! 
@@ -38,7 +59,7 @@ Revision history for Perl extension Weather::Com.
       So we'll get some structure in it. This will be usefull if one wants
       to write some other caching package, we than can tell it 
       Weather::Com::Cached::MySQL for example, etc.
-    - added automated version information (using the CVS $Revision: 1.13 $ tag)
+    - added automated version information (using the CVS $Revision: 1.16 $ tag)
       to all packages
     - added consistency checking for paramters passed to Weather::Com
     - Weather::Com now only accepts paths to put the cache in if it is

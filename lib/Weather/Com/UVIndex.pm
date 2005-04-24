@@ -3,24 +3,34 @@ package Weather::Com::UVIndex;
 use 5.006;
 use strict;
 use warnings;
-use Class::Struct;
+use Weather::Com::L10N;
+use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
-# The uv index class will not be a Weather::Cached class by itself,
-# because then it would not be easy to now whether it is current
-# conditions uv index or forecast uv index and if forecast uv index,
-# then of which day, etc.
-#
-# Weather::Com::UVIndex consists almost only of pure data and no
-# significant logic has to be build in. Therefore, we simply use a
-# Class::Struct subclass.
+# Constructor
 #------------------------------------------------------------------------
-struct(
-		index       => '$',
-		description => '$',    
-);
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my %parameters;
+
+	# parameters provided by new method
+	if ( ref( $_[0] ) eq "HASH" ) {
+		%parameters = %{ $_[0] };
+	} else {
+		%parameters = @_;
+	}
+
+	my $self = $class->SUPER::new( \%parameters );
+
+	# getting first weather information
+	$self->{INDEX}       = -1;
+	$self->{DESCRIPTION} = 'unknown';
+
+	return $self;
+}    # end new()
 
 #------------------------------------------------------------------------
 # update wind data
@@ -36,14 +46,27 @@ sub update {
 	}
 
 	unless ( $uv{i} ) {
-		$self->index(-1);
-		$self->description("unknown");
+		$self->{INDEX}       = -1;
+		$self->{DESCRIPTION} = "unknown";
 	} else {
-		$self->index($uv{i});
-		$self->description($uv{t});
+		$self->{INDEX}       = $uv{i};
+		$self->{DESCRIPTION} = lc($uv{t});
 	}
 
 	return 1;
+}
+
+#------------------------------------------------------------------------
+# accessor methods
+#------------------------------------------------------------------------
+sub index {
+	my $self = shift;
+	return $self->{INDEX};
+}
+
+sub description {
+	my $self = shift;
+	return $self->{LH}->maketext($self->{DESCRIPTION});
 }
 
 1;
@@ -68,6 +91,7 @@ Weather::Com::UVIndex - class containing the uv index data
   my %weatherargs = (
 	'partner_id' => $PartnerId,
 	'license'    => $LicenseKey,
+	'language'   => 'de',
   );
 
   my $weather_finder = Weather::Com::Finder->new(%weatherargs);
@@ -86,7 +110,7 @@ description (whether it's high or low). An uv index is usually an object
 belonging to current conditions or to a forecast (not implemented yet).
 
 This class will B<not> be updated automatically with each call to one
-of its methods. You need to call the C<wind()> method of the parent
+of its methods. You need to call the C<uv_index()> method of the parent
 object again to update your object.
 
 =head1 CONSTRUCTOR
@@ -104,6 +128,9 @@ Returns the uv index (number).
 =head2 description()
 
 Returns the description whether this index is high or low.
+
+This description is translated if you specified the I<language>
+option as argument while instantiating your I<Weather::Com::Finder>.
 
 =head1 AUTHOR
 

@@ -1,6 +1,6 @@
 package Weather::Com;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.8 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.10 $ =~ /(\d+)/g;
 
 1;
 
@@ -22,6 +22,7 @@ Weather::Com - fetching weather information from I<weather.com>
   my %weatherargs = (
 	'partner_id' => $PartnerId,
 	'license'    => $LicenseKey,
+	'language'   => 'de',
   );
 
   my $weather_finder = Weather::Com::Finder->new(%weatherargs);
@@ -79,6 +80,7 @@ optional and have sensible defaults.
   my %config = (
   	partner_id => 'somepartnerid',	# mandatory
   	license    => 'somelicensekey'	# mandatory
+  	language   => 'de',
   	units      => 's',
    	cache      => '/tmp/weather',
    	timeout    => 300,
@@ -101,6 +103,16 @@ I<License Key>.
 =item license => 'somelicensekey'
 
 See I<partner_id>.
+
+=item language => 'somelanguagecode'
+
+I<weather.com> returns some textual data to describe the weather
+conditions, uv index, moon phase, wind direction, etc.
+
+If one specifies a valid language as configuration parameter, this
+textual descriptions are translated into that language. If one specifies
+a language for that there's no translation, the objects will return the
+english texts.
 
 =item cache => '/any/path'
 

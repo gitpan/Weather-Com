@@ -1,35 +1,95 @@
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl Weather-Com.t'
+#####################################################################
+#
+#  Test suite for 'Weather::Com::Base'
+#
+#  Testing network connection (without proxy).
+#  Functional tests with 'Test::MockObject'. These could only be run
+#  if Test::MockObject is installed.
+#
+#  Before `make install' is performed this script should be runnable 
+#  with `make test'. After `make install' it should work as 
+#  `perl t/Base.t'
+#
+#####################################################################
+#
+# initialization
+#
+no warnings;
+use Test::More tests => 7;
+require 't/TestData.pm';
 
-#########################
-
-# change 'tests => 1' to 'tests => last_test_to_print';
-
-use Test::More tests => 6;
-BEGIN { 
+BEGIN {
 	use_ok('Weather::Com::Base');
-};
+}
 
-#########################
+#####################################################################
+#
+# Testing object instantiation (do we use the right class)?
+#
+my %weatherargs = (
+					'debug'    => 0,
+					'language' => 'en',
+);
 
-my $wc = Weather::Com::Base->new();
-isa_ok($wc, "Weather::Com::Base",    'Is a Weatcher::Com::Base object');
+my $wc = Weather::Com::Base->new(%weatherargs);
+isa_ok( $wc, "Weather::Com::Base", 'Is a Weatcher::Com::Base object' );
 
+#
 # Test static methods of Weather::Com::Base
-is(&Weather::Com::Base::celsius2fahrenheit(20), 68, 'Celsius to Fahrenheit conversion');
-is(&Weather::Com::Base::fahrenheit2celsius(68), 20, 'Fahrenheit to Celsius conversion');
+#
+is( &Weather::Com::Base::celsius2fahrenheit(20),
+	68, 'Celsius to Fahrenheit conversion' );
+is( &Weather::Com::Base::fahrenheit2celsius(68),
+	20, 'Fahrenheit to Celsius conversion' );
 
+#
+# Test network connection
+#
 
-# test search method
-my $heidelberg_locs = {
-        'GMXX0053' => 'Heidelberg, Germany',
-        'USKY0990' => 'Heidelberg, KY',
-        'USMS0154' => 'Heidelberg, MS'
-};
-is_deeply($wc->search('Heidelberg'), $heidelberg_locs, 'Look for locations named Heidelberg');
+# remove all old cache files
+unlink <*.dat>;
 
-my $nuernberg_locs = {
-		'GMXX0096' => 'Nurnberg, Germany'
-};
-is_deeply($wc->search('Nürnberg'), $nuernberg_locs, 'Check if Umlaut-search does work');
+SKIP: {
+	eval { my $locations = $wc->search('New York'); };
+	skip(
+		 "Could not connect to 'weather.com'! No network connection available?",
+		 1
+	  )
+	  if ($@);
+	is_deeply( $wc->search('New York'),
+			   $NY_Hash, 'Locations search with network connection.' );    
+
+}
+
+#
+# Test functionality if Test::MockObject is installed.
+#
+SKIP: {
+	eval { require Test::MockObject };
+	skip "Test::MockObject not installed", 2 if $@;
+
+	my $mock = Test::MockObject->new();
+	$mock->fake_module( 'LWP::UserAgent' =>
+					   ( 'request' => sub { return HTTP::Response->new() }, ) );
+	$mock->fake_module(
+						'HTTP::Response' => (
+										   'is_success' => sub { return 1 },
+										   'content' => sub { return $NY_HTML },
+						)
+	);
+
+	is_deeply( $wc->search('New York'),
+			   $NY_Hash, 'Locations search with faked UserAgent' );
+
+	$mock->fake_module(
+						'HTTP::Response' => (
+										 'is_success' => sub { return 1 },
+										 'content' => sub { return $NYCP_HTML },
+						)
+	);
+
+	is_deeply( $wc->get_weather('USNY0998'),
+			   $NYCP_Hash,
+			   'Look for weather data for "New York/Central Park, NY"' );
+}
 

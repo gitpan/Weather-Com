@@ -2,6 +2,7 @@ package Weather::Com::DateTime;
 
 use 5.006;
 use strict;
+no warnings;
 
 #use warnings;
 use Carp;
@@ -9,7 +10,7 @@ use Data::Dumper;
 use Time::Format;
 use Time::Local;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
 
 our %months = (
 	'Jan' => 0,
@@ -145,7 +146,6 @@ sub formatted {
 	
 	# Time::Format always returns localtime of the server the
 	# script runs on. We have to eliminate this.
-	#my $fakeepoc = (gmtime($self->{EPOC}));
 	my $localepoc = $self->{EPOC} + ( $self->{ZONE} * 3600 );
 	return $time{ $format, $localepoc };    
 }

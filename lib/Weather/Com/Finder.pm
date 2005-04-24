@@ -8,7 +8,7 @@ use Data::Dumper;
 use Weather::Com::Cached;
 use Weather::Com::Location;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -47,6 +47,7 @@ sub new {
 	$weatherargs{partner_id} = $parameters{partner_id}
 	  if ( $parameters{partner_id} );
 	$weatherargs{license} = $parameters{license} if ( $parameters{license} );
+	$weatherargs{language} = $parameters{language} if ( $parameters{language} );	
 
 	# initialize weather object
 	$self->{ARGS}    = \%weatherargs;
@@ -74,6 +75,7 @@ sub find {
 	foreach ( keys %{$loc_weather} ) {
 		my %weatherargs = %{ $self->{ARGS} };
 		$weatherargs{location_id} = $_;
+		$weatherargs{location_name} = $loc_weather->{$_};
 		
 		my $location = Weather::Com::Location->new(%weatherargs);
 		push( @locations, $location );

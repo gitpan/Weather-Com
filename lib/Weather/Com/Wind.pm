@@ -1,36 +1,38 @@
 package Weather::Com::Wind;
 
-#
-# !!!DO NOT USE WARNINGS!!! this will cause Class::Struct to tell you
-# that direction_long() is redefined - what is true, but wanted!
-#
-
 use 5.006;
 use strict;
-use Class::Struct;
-use Weather::Com::Base qw(convert_winddirection);
+use warnings;
+use Weather::Com::L10N;
+use Weather::Com::Base qw/convert_winddirection/;
+use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.8 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
-# The wind class will not be a Weather::Cached class by itself, because
-# then it would not be easy to now whether it is current conditions wind
-# or forecast wind and if forecast wind, then of which day, etc.
-#
-# Weather::Com::Wind consists almost only of pure data and no
-# significant logic has to be build in. Therefore, we simply use a
-# Class::Struct subclass.
+# Constructor
 #------------------------------------------------------------------------
-struct(
-	'Weather::Com::Wind',
-	{
-	   speed             => '$',
-	   maximum_gust      => '$',
-	   direction_degrees => '$',
-	   direction_short   => '$',
-	   direction_long    => '$',
-	}    
-);
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my %parameters;
+
+	# parameters provided by new method
+	if ( ref( $_[0] ) eq "HASH" ) {
+		%parameters = %{ $_[0] };
+	} else {
+		%parameters = @_;
+	}
+
+	my $self = $class->SUPER::new( \%parameters );
+
+	# getting first weather information
+	$self->{SPEED}       = -1;
+	$self->{GUST}        = -1;
+	$self->{DIR_DEGREES} = -1;
+	$self->{DIR_TXT}     = 'N/A';
+	return $self;
+}    # end new()
 
 #------------------------------------------------------------------------
 # update wind data
@@ -47,34 +49,55 @@ sub update {
 
 	# handle non existent wind data
 	unless ( $wind{s} ) {
-		$self->speed(-1);
-		$self->maximum_gust(-1);
-		$self->direction_degrees(-1);
-		$self->direction_short('N/A');
+		$self->{SPEED}       = -1;
+		$self->{GUST}        = -1;
+		$self->{DIR_DEGREES} = -1;
+		$self->{DIR_TXT}     = 'N/A';
 	} elsif ( lc( $wind{s} ) eq "calm" ) {
 
 		# special rules apply if speed is non-numeric
-		$self->speed(0);
-		$self->maximum_gust(0);
-		$self->direction_degrees(-1);
-		$self->direction_short('N/A');
+		$self->{SPEED}       = 0;
+		$self->{GUST}        = 0;
+		$self->{DIR_DEGREES} = -1;
+		$self->{DIR_TXT}     = 'N/A';
 	} else {
 
 		# else update object data
-		$self->speed( $wind{s} );
-		$self->maximum_gust($wind{gust});
-		$self->direction_degrees( $wind{d} );
-		$self->direction_short( $wind{t} );
+		$self->{SPEED}       = $wind{s};
+		$self->{GUST}        = $wind{gust};
+		$self->{DIR_DEGREES} = $wind{d};
+		$self->{DIR_TXT}     = $wind{t};
 	}
 
 }
 
 #------------------------------------------------------------------------
-# overwrite method $self->direction_long()
+# accessor methods
 #------------------------------------------------------------------------
+sub speed {
+	my $self = shift;
+	return $self->{SPEED};
+}
+
+sub maximum_gust {
+	my $self = shift;
+	return $self->{GUST};
+}
+
+sub direction_degrees {
+	my $self = shift;
+	return $self->{DIR_DEGREES};
+}
+
+sub direction_short {
+	my $self = shift;
+	return $self->{LH}->maketext( $self->{DIR_TXT} );
+}
+
 sub direction_long {
 	my $self = shift;
-	return convert_winddirection( $self->direction_short() );
+	my $dir  = convert_winddirection( $self->{DIR_TXT} );
+	return $self->{LH}->maketext($dir);    
 }
 
 1;
@@ -99,6 +122,7 @@ Weather::Com::Wind - class containing wind data
   my %weatherargs = (
 	'partner_id' => $PartnerId,
 	'license'    => $LicenseKey,
+	'language'   => 'de',
   );
 
   my $weather_finder = Weather::Com::Finder->new(%weatherargs);
@@ -140,16 +164,16 @@ Returns the direction of the wind in degrees.
 
 Returns the direction of the wind as wind mnemonic (N, NW, E, etc.).
 
-For a full list of wind directions please refer to 
-L<Weather::Com::Base>.
+These directions are being translated if you specified a language in the
+parameters you provided to your I<Weather::Com::Finder>.
 
 =head2 direction_long()
 
 Returns the direction of the wind as long textual description
 (North, East, Southwest, etc.).
 
-For a full list of wind directions please refer to 
-L<Weather::Com::Base>.
+These directions are being translated if you specified a language in the
+parameters you provided to your I<Weather::Com::Finder>.
 
 =head1 AUTHOR
 

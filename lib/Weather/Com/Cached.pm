@@ -8,7 +8,7 @@ use Data::Dumper;
 use Weather::Com::Base;
 use base "Weather::Com::Base";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -52,8 +52,8 @@ sub new {
 
 #------------------------------------------------------------------------
 # searching for location codes
-# Weather::Com::Cached will not search for location codes cached in
-# "locations.dat"
+# Weather::Com::Cached will not search on the web for location codes
+# that are cached in "locations.dat"
 #------------------------------------------------------------------------
 sub search {
 	my $self      = shift;
@@ -67,25 +67,59 @@ sub search {
 
 	# 1st, look for locations in cache
 	my $locations_cached = undef;
-	my $loccachefile = $self->{PATH} . "/locations.dat";
+	my $loccachefile     = $self->{PATH} . "/locations.dat";
 	if ( -f $loccachefile ) {
 		$locations_cached = lock_retrieve($loccachefile);
-		if ( $locations_cached->{$place} ) {
+		if ( $locations_cached->{ lc($place) } ) {
 			$self->_debug("Found locations in location cache.");
-			$locations = $locations_cached->{$place};
+			$locations = $locations_cached->{ lc($place) };
+		} else {
+			$self->_debug("No direct match found in cache.");
 		}
 	}
 
 	# 2nd, if nothing has been found, search the Web and store data
-	unless ($locations) {
+	unless ( keys %{$locations} ) {
 		$locations = $self->SUPER::search($place);
-		if ( $locations) {
+		if ($locations) {
+			$self->_debug("Found locations on the web.");
 			$self->_debug("Writing locations to cache.");
-			$locations_cached->{$place} = $locations;
-			unless (lock_store( $locations_cached, $loccachefile)  ) {
-				die ref($self), ": ERROR I/O problem while storing locations cachefile!";
-			}  
-		} 
+
+			# first save the direct search result
+			$locations_cached->{ lc($place) } = $locations;
+
+			# then store for each result the name => key hash
+			foreach my $location ( keys %{$locations} ) {
+				my $name = $locations->{$location};
+				$locations_cached->{ lc($name) } = { $location => $name };
+			}
+
+			# then store in cache file
+			unless ( lock_store( $locations_cached, $loccachefile ) ) {
+				die ref($self),
+				  ": ERROR I/O problem while storing locations cachefile!";
+			}
+		} elsif ($locations_cached) {
+
+			# if neither the cache nor the weather.com server did return
+			# an exact match, try a regexp search over the cache.
+			$self->_debug("No direct match in cache or on the web.");
+			$self->_debug("Trying regexp search.");
+			$locations = {};
+			foreach my $location ( keys %{$locations_cached} ) {
+				if ( $location =~ /$place/i ) {
+					$self->_debug(
+								"MATCH: '$place' matches location '$location'");
+					%{$locations} = (
+									  %{$locations},
+									  %{
+										  $locations_cached->{ lc($location) }
+										}
+					);
+				}
+			}
+		}
+
 	}
 
 	return $locations;
@@ -155,6 +189,8 @@ sub get_weather {
 		}
 	}
 
+	$self->_debug("Params for cache conditions: ".Dumper($self->{PARAMS}));
+
 	# only update weathercache if a current conditions update or a
 	# forecast update is necessary or the location data is older than
 	# 15 minutes.
@@ -167,9 +203,9 @@ sub get_weather {
 
 		my $weather = $self->SUPER::get_weather($locid);
 		foreach ( keys %{$weather} ) {
-			if ( ref( $weather->{$_} ) ) {
-				$weathercache->{$_} = $weather->{$_};
-				$weathercache->{$_}->{cached} = time();
+			$weathercache->{$_} = $weather->{$_};
+			if ( ref( $weather->{$_} ) ) {    
+				$weathercache->{$_}->{cached} = $self->_cache_time();
 			}
 		}
 
@@ -233,13 +269,20 @@ sub _older_than {
 	my $self              = shift;
 	my $caching_timeframe = shift;
 	my $cached            = shift || 0;
-	my $now               = time();
+	my $now               = $self->_cache_time();
 
 	if ( $cached < ( $now - $caching_timeframe * 60 ) ) {
 		return 1;
 	} else {
 		return 0;
 	}
+}
+
+# this method encapsulates the time() method to be able to test
+# with Test::MockObject and setting a fixed time
+sub _cache_time {
+	my $self = shift;
+	return time();
 }
 
 1;
@@ -316,6 +359,78 @@ write against I<weather.com>'s I<xoap> interface.
 
 L<http://www.weather.com/services/xmloap.html>
 
+=head1 CHANGES
+
+The location caching mechanism has been extended with version 0.4. Up to
+V0.4 searches were stored this way:
+
+  $locations_cache = {
+  		'New York' => {
+                         'USNY1000' => 'New York/La Guardia Arpt, NY',
+                         'USNY0998' => 'New York/Central Park, NY',
+                         'USNY0999' => 'New York/JFK Intl Arpt, NY',
+                         'USNY0996' => 'New York, NY'
+  		},
+  }
+
+This has changed the way it does not only store a
+
+  search_string => locations
+
+hash. The cache now also stores a hash for B<each> location name found:
+
+  $locations_cache => {
+  	'new york' => {
+  		'USNY1000' => 'New York/La Guardia Arpt, NY',
+  		'USNY0998' => 'New York/Central Park, NY',
+  		'USNY0999' => 'New York/JFK Intl Arpt, NY',
+  		'USNY0996' => 'New York, NY'
+  	},
+  	'new york/central park, ny' => {
+  		'USNY0998' => 'New York/Central Park, NY'
+  	},
+  	'new york/la guardia arpt, ny' => {
+  		'USNY1000' => 'New York/La Guardia Arpt, NY'
+  	},
+  	'new york, ny' => {
+  		'USNY0996' => 'New York, NY'
+  	},
+  	'new york/jfk intl arpt, ny' => {
+  		'USNY0999' => 'New York/JFK Intl Arpt, NY'
+  	},
+  }
+
+The new mechanism has the following advantages:
+
+=over 4
+
+=item 1.
+
+The new chaching mechanism is B<case insensitive>
+
+=item 2.
+
+This caching mechanism is a workaround one problem with I<weather.com>'s
+XOAP API. 
+
+Their server does not understand any search string with a '/' in
+it - no matter wether the '/' is URL encoded or not!
+
+This way, if you have searched for I<New York> once, you'll then also 
+get a result for direct calls to I<New York/Jfk Intl Arpt, NY>.
+
+=item 3.
+
+The new mechanism also allows searches for I<slashed> substrings. A search
+for I<York/Central> will return the I<New York/Central Park, NY> location
+and if you simply search I<York>, you'll get anything containing I<York>.
+No matter if it's in the cache or not. 
+
+Only if you specify B<exactly> the name of a location in the cache, only
+this location is shown.
+
+=back
+
 =head1 CONSTRUCTOR
 
 =head2 new(hash or hashref)
@@ -331,7 +446,35 @@ The cache directory defaults to '.'.
 
 =head1 METHODS
 
-That's all the same as for I<Weather::Com::Base>.
+=head2 search(search string)
+
+The C<search()> method has the same interface as the one of
+I<Weather::Com::Base>. The difference is made by the caching.
+
+The search is performed in the following order:
+
+=over 4
+
+=item 1.
+
+If there's a direct match in the locations cache, return the
+locations from the cache.
+
+=item 2.
+
+If not, if there's a direct match on the web, return the
+locations found on the web and write the search result to
+the cache.
+
+=item 3.
+
+If not, try a regexp search over all cached search strings and
+location names. This will return each location that matches the
+search string.
+
+=back
+
+The rest is all the same as for I<Weather::Com::Base>.
 
 =head1 SEE ALSO
 
