@@ -1,6 +1,6 @@
 package Weather::Com;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.10 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.11 $ =~ /(\d+)/g;
 
 1;
 
@@ -53,6 +53,33 @@ The data provided by I<weather.com> and made accessible by this OO
 interface can be used for free under special terms. Please have a look 
 at the application programming guide of I<weather.com> 
 L<http://www.weather.com/services/xmloap.html>
+
+=head1 LOCALIZATION
+
+Weather-Com uses I<Locale::Maketext> for the l10n. Foreach language there
+has to be package I<Weather::Com::L10N::[langcode]> (e.g. I<Weather::Com::L10N::de>).
+
+Localization is new with version 0.4 of Weather-Com. Therefore, there are not too
+many languages supported, yet. If one wants to create such a language definition package
+for a language that is not part of this module, please do the following:
+
+=over 4
+
+=item 1.
+
+check my homepage to verify that the language package has not been created by someone
+else, yet (L<http://www.schnuecker.org/index.php?weather-com>).
+
+=item 2.
+
+contact me to verify if anybody else already is already translating into this language
+
+=item 3.
+
+just do it and send me your new language package. It then will be first put onto my
+website for download and then it will be part of the next release.
+
+=back
 
 =head1 TUTORIAL
 
@@ -292,6 +319,16 @@ L<Weather::Com::Simple>
 =head2 Detailed documentation of the low level interface
 
 L<Weather::Com::Cached> and L<Weather::Com::Base>
+
+=head1 BUGS/SUPPORT/PRE-RELEASES
+
+If you want to report a bug, please use the CPAN bug reporting tool.
+
+If you have any question, suggestion, feature request, etc. please use the
+CPAN forum.
+
+If you are looking for fixes, pre-releases, etc. have a look at my website
+L<http://www.schnuecker.org/index.php?weather-com>.
 
 =head1 AUTHOR
 

@@ -1,5 +1,7 @@
 Makefile.PL
+BUGS
 Changes
+INSTALL
 MANIFEST
 README
 TODO
@@ -12,6 +14,7 @@ lib/Weather/Com/DateTime.pm
 lib/Weather/Com/DayForecast.pm
 lib/Weather/Com/DayPart.pm
 lib/Weather/Com/Finder.pm
+lib/Weather/Com/Forecast.pm
 lib/Weather/Com/L10N.pm
 lib/Weather/Com/L10N/de.pm
 lib/Weather/Com/L10N/en_us.pm

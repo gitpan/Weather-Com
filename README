@@ -1,5 +1,5 @@
-Weather-Com version 0.4_pre2
-=============================
+Weather-Com version 0.4.1
+=========================
 
 Introduction:
 --------------
@@ -7,31 +7,34 @@ Weather-Com is meant to be a module suite enabling the perl programmer
 to access weather information as provided by weather.com's XOAP
 interface.
 
-I've tried to use Weather::Underground for some time but soon I found
-out that 'www.wunderground.com' does not provide much information about
-locations outside the US. I am german, hence, I had to look for a
-site providing international weather information - at least for the
-cities I usually work or live at.
+This interface is a kind of HTTP-GET/XMLResponse API (not really a
+WebService). They also provide an SDK containing implementation guides,
+weather icons in several sizes, 'The Weather Channel' logos, etc.
 
-After surfing around for some time a friend of mine mentioned a
-PHP package (or whatever they call what we call 'module' or 'package')
-that accesses weather.com. I visited the weather.com site and found 
-an SDK providing detailed information on their mixture of an 
-HTTP-GET/XMLResponse API (http://www.weather.com/services/xmloap.html).
- 
-They provide lots of information - not only the current conditions 
-like Weather::Underground does, but also up to 10 days of forecast 
-containing most information one could need, e.g. the time of sunrise 
-and sunset, the longitude and latitude of the location, data precompiled 
-either in the US system or in the metric system, etc. 
+By this XOAP API they provide lots of information - not only the current
+conditions like other weather services do, but also up to 10 days of 
+forecast containing most information one could need, e.g. the time of
+sunrise and sunset, the longitude and latitude of the location, data 
+precompiled either in the US system or in the metric system, etc. 
 
-To use this module you have to register first at weather.com
+Up from version 0.4 this module contains localization support. That is,
+textual weather data provided by weather.com (wind directions, current
+conditions descriptions, uv index descriptions, moon phases, etc.)
+can be translated into your favourite language - if someone did the
+translation.
+
+For each language there has to be a language package (e.g. 
+Weather::Com::L10N::de for German). If there are new languages available
+that are not already included in this release, you'll find them on my
+support webpage (http://www.schnuecker.org/weather-com). If you don't
+find your prefered language, feel free to build your own language pack
+and send it to me. I'll then put it on my support page and it will be
+part of the next release. 
+
+To use the weather.com's service you have to register first
 (http://www.weather.com/services/xmloap.html), but's for free.
-You'll be send a mail containing your 'partner id', a license key
-and a link where to download the SDK which includes the 
-application developement guide, logos from weather.com and weather icons 
-in three different sizes (as .png) to be able to show not only the facts 
-and figures of the weather data you read.
+You'll be send an email containing your 'partner id', a license key
+and a link where to download the SDK.
 
 Components of this module:
 --------------------------
@@ -41,8 +44,7 @@ This module consists of several parts:
 2. Weather::Com::Cached - implements the caching rules from weather.com
 3. Weather::Com::Simple - high level wrapper around the API providing the
                           same interace as Weather::Underground
-4. Weather::Com::Finder - The entrance point to the new, more feature rich
-                          high level interface.
+4. Weather::Com::Finder - The entrance point to the main high level interface.
 5. weather.pl           - a sample console program using Weather::Com::Simple
 6. weather_ext.pl       - a sample console program using the new high level 
                           interface
@@ -62,40 +64,3 @@ If you want to implement another caching package for Weather::Com
 please contact the author of this module and tell him... There's no
 need to to the same work twice. Same applies for other packages to
 be build around the above ones.
-
-INSTALLATION
-
-To install this module type the following:
-
-   perl Makefile.PL
-   make
-   make test		# tests will fail if you are 
-   					# not connected to the internet
-   make install
-
-DEPENDENCIES
-
-This module requires these other modules and libraries:
-
-  - LWP::UserAgent
-  - Storable
-  - Time::Local
-  - Time::Format
-  - XML::Simple
-  - URI::Escape
-
-COPYRIGHT AND LICENCE
-
-Copyright (C) 2004-2005 by Thomas Schnuecker (thomas@schnuecker.de)
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-The data provided by weather.com and made accessible by this OO
-interface can be used for free under special terms. 
-
-Please register at http://www.weather.com/services/xmloap.html, download
-the SDK and have a look at the application programming guide for further
-information about legal issues.
-
-
