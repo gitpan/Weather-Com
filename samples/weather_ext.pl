@@ -1,13 +1,14 @@
 #!/usr/bin/perl
-# $Revision: 1.5 $
+# $Revision: 1.6 $
 use strict;
 use warnings;
 use Weather::Com::Finder;
 
+# autoflush
 $| = 1;
 
 # have a cvs driven version...
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
 
 # you have to fill in your ids from weather.com here
 my $PartnerId  = '';
@@ -15,7 +16,7 @@ my $LicenseKey = '';
 
 # you can preset units of messures here
 # (m for metric (default), s for us)
-my $units = 'm';
+my $units    = 'm';
 my $language = 'de';
 
 # if you need a proxy... maybe with authentication
@@ -41,6 +42,12 @@ my %weatherargs = (
 					'language'   => $language,
 );
 
+# This is a global var for dynamic language test
+# it can be set from within the program like
+# 'set language de_DE'
+my $dyn_lang = undef;    # dynamic language, to be changed
+
+# my weather finder instance
 my $weather_finder = Weather::Com::Finder->new(%weatherargs);
 
 # print greeting
@@ -48,6 +55,11 @@ print "\nWelcome to Uncle Tom's weather station, extended edition...\n";
 print "This is V$VERSION\n";
 print "\nPlease enter a location name to look for, e.g\n";
 print "'Heidelberg' or 'Seattle, WA', or 'Munich, Germany'\n\n";
+print "Additional commands are:\n";
+print "  'end'                     to quit this program\n";
+print "  'set language <lang_tag>' to dynamically change the language\n";
+print "  'language'                to get the current languages tag\n";
+print "  'reset language'          to change back to your default language\n\n";
 
 # define prompt
 my $prompt = '$> ';
@@ -57,6 +69,23 @@ while ( chomp( my $input = <STDIN> ) ) {
 
 	# don't want any empty input
 	unless ( $input =~ /\S+/ ) {
+		print $prompt;
+		next;
+	}
+
+	# handle dynamic language
+	if ( $input =~ /^set language (.+)$/ ) {
+		$dyn_lang = $1;
+		print $prompt;
+		next;
+	}
+	if ( $input =~ /^reset language$/ ) {
+		$dyn_lang = undef;
+		print $prompt;
+		next;
+	}
+	if ( $input =~ /^language$/ ) {
+		print $dyn_lang || $language, "\n";
 		print $prompt;
 		next;
 	}
@@ -105,9 +134,10 @@ while ( chomp( my $input = <STDIN> ) ) {
 		# current conditions
 		print "\nCurrent Conditions (last update ",
 		  $location->current_conditions()->last_updated()->time(), " on ",
-		  $location->current_conditions()->last_updated()->formatted('dd.mm.yyyy'), "):\n";
+		  $location->current_conditions()->last_updated()
+		  ->formatted('dd.mm.yyyy'), "):\n";
 		print " * current conditions are ",
-		  $location->current_conditions()->description(), ".\n";
+		  $location->current_conditions()->description($dyn_lang), ".\n";
 		print " * visibilty is about ",
 		  $location->current_conditions()->visibility(), " $uodist.\n";
 		print " * and the temperature is ",
@@ -123,9 +153,11 @@ while ( chomp( my $input = <STDIN> ) ) {
 		print " * wind speed is ",
 		  $location->current_conditions()->wind()->speed(), " $uospeed.\n";
 		print " * wind comes from ",
-		  $location->current_conditions()->wind()->direction_long(), ".\n";
+		  $location->current_conditions()->wind()->direction_long($dyn_lang),
+		  ".\n";
 		print "   ... in short ",
-		  $location->current_conditions()->wind()->direction_short(), ".\n";
+		  $location->current_conditions()->wind()->direction_short($dyn_lang),
+		  ".\n";
 		print "   ... in degrees ",
 		  $location->current_conditions()->wind()->direction_degrees(), ".\n";
 		print "   ... max. gust ",
@@ -136,7 +168,8 @@ while ( chomp( my $input = <STDIN> ) ) {
 		print " * uv index is ",
 		  $location->current_conditions()->uv_index()->index(), ".\n";
 		print "   ... that is ",
-		  $location->current_conditions()->uv_index()->description(), ".\n";
+		  $location->current_conditions()->uv_index()->description($dyn_lang),
+		  ".\n";
 
 		# all about barometric pressure
 		print " * air pressure is ",
@@ -147,7 +180,7 @@ while ( chomp( my $input = <STDIN> ) ) {
 
 		# moon...
 		print " * moon phase is ",
-		  $location->current_conditions()->moon()->description(), "\n";
+		  $location->current_conditions()->moon()->description($dyn_lang), "\n";
 
 		# forecasts
 		my $forecast = $location->forecast();
@@ -165,31 +198,34 @@ while ( chomp( my $input = <STDIN> ) ) {
 
 		print "Daytime data:\n";
 		if ( $today->day() ) {
-			print "... conditions:     ", $today->day()->conditions(),    "\n";
+			print "... conditions:     ", $today->day()->conditions($dyn_lang),
+			  "\n";
 			print "... humidity:       ", $today->day()->humidity(),      "\n";
 			print "... precipitation:  ", $today->day()->precipitation(), "\n";
 			print "... wind speed:     ", $today->day()->wind()->speed(), "\n";
 			print "... max gust:       ", $today->day()->wind()->maximum_gust(),
 			  "\n";
-			print "... wind dir: ", $today->day()->wind()->direction_long(),
-			  "\n";
+			print "... wind dir: ",
+			  $today->day()->wind()->direction_long($dyn_lang), "\n";
 			print "... wind dir: ", $today->day()->wind()->direction_degrees(),
 			  "\n";
 		}
 		print "Nightly data:\n";
-		print "... conditions:     ", $today->night()->conditions(),    "\n";
+		print "... conditions:     ", $today->night()->conditions($dyn_lang),
+		  "\n";
 		print "... humidity:       ", $today->night()->humidity(),      "\n";
 		print "... precipitation:  ", $today->night()->precipitation(), "\n";
 		print "... wind speed:     ", $today->night()->wind()->speed(), "\n";
 		print "... max gust:       ", $today->night()->wind()->maximum_gust(),
 		  "\n";
-		print "... wind dir: ", $today->night()->wind()->direction_long(), "\n";
+		print "... wind dir: ",
+		  $today->night()->wind()->direction_long($dyn_lang), "\n";
 		print "... wind dir: ", $today->night()->wind()->direction_degrees(),
 		  "\n";
 
 		foreach my $day ( $forecast->all() ) {
 			print "Have forecast for ", $day->date()->weekday(), ", ",
-			  $day->date()->date(), "\n";    
+			  $day->date()->date(), "\n";
 			print "Max Temp is ", $day->high(), "\n";
 			print "Min Temp is ", $day->low(),  "\n";
 			print "Percent chance of precipitation at night: ",
@@ -216,12 +252,17 @@ weather_ext.pl - Sample script to show the usage of the OO API of I<Weather::Com
 
   #> ./weather_ext.pl [-d]
   
-  Welcome to Uncle Tom's weather station...
-  
+  Welcome to Uncle Tom's weather station, extended edition...
+  This is V1.006
+
   Please enter a location name to look for, e.g
   'Heidelberg' or 'Seattle, WA', or 'Munich, Germany'
-  
-  Type 'end' to exit.
+
+  Additional commands are:
+    'end'                     to quit this program
+    'set language <lang_tag>' to dynamically change the language
+    'language'                to get the current languages tag
+    'reset language'          to change back to your default language
   
   $>
 

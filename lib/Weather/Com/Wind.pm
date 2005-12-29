@@ -7,7 +7,7 @@ use Weather::Com::L10N;
 use Weather::Com::Base qw/convert_winddirection/;
 use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.8 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.9 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -90,14 +90,18 @@ sub direction_degrees {
 }
 
 sub direction_short {
-	my $self = shift;
-	return $self->{LH}->maketext( $self->{DIR_TXT} );
+	my $self     = shift;
+	my $language = shift;
+
+	return $self->get_language_handle($language)->maketext( $self->{DIR_TXT} );
 }
 
 sub direction_long {
-	my $self = shift;
-	my $dir  = convert_winddirection( $self->{DIR_TXT} );
-	return $self->{LH}->maketext($dir);    
+	my $self     = shift;
+	my $language = shift;
+
+	my $dir = convert_winddirection( $self->{DIR_TXT} );
+	return $self->get_language_handle($language)->maketext($dir);
 }
 
 1;
@@ -160,14 +164,16 @@ Returns the wind speed.
 
 Returns the direction of the wind in degrees.
 
-=head2 direction_short()
+=head2 direction_short([$language])
 
 Returns the direction of the wind as wind mnemonic (N, NW, E, etc.).
 
 These directions are being translated if you specified a language in the
 parameters you provided to your I<Weather::Com::Finder>.
 
-=head2 direction_long()
+This attribute is I<dynamic language enabled>.
+
+=head2 direction_long([$language])
 
 Returns the direction of the wind as long textual description
 (North, East, Southwest, etc.).
@@ -175,13 +181,15 @@ Returns the direction of the wind as long textual description
 These directions are being translated if you specified a language in the
 parameters you provided to your I<Weather::Com::Finder>.
 
+This attribute is I<dynamic language enabled>.
+
 =head1 AUTHOR
 
 Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Thomas Schnuecker
+Copyright (C) 2004-2005 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

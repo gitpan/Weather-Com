@@ -13,7 +13,7 @@
 #
 # initialization
 #
-use Test::More tests => 10;
+use Test::More tests => 8;
 BEGIN { 
 	use_ok('Weather::Com::DateTime');
 };
@@ -31,9 +31,7 @@ isa_ok($wc, "Weather::Com::DateTime",    'Is a Weatcher::Com::DateTime object');
 
 is($wc->time(),         "23:21",                    '24 hour time');
 is($wc->time_ampm(),    "11:21 PM",                 'AM/PM mode');
-is($wc->date(),         "25. February 2005",        'Long date format');
 is($wc->day(),          "25",                       'Day Number');
-is($wc->month(),        "February",                 'Name of month');
 is($wc->mon(),          "02",                       'Number of month');
 is($wc->year(),         "2005",                     'Year');
 is(gmtime($wc->epoc()), 'Sat Feb 26 05:21:00 2005', 'GMTime');

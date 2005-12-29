@@ -6,7 +6,7 @@ use warnings;
 use Weather::Com::L10N;
 use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.8 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -50,7 +50,7 @@ sub update {
 		$self->{DESCRIPTION} = "unknown";
 	} else {
 		$self->{INDEX}       = $uv{i};
-		$self->{DESCRIPTION} = lc($uv{t});
+		$self->{DESCRIPTION} = lc( $uv{t} );
 	}
 
 	return 1;
@@ -65,8 +65,11 @@ sub index {
 }
 
 sub description {
-	my $self = shift;
-	return $self->{LH}->maketext($self->{DESCRIPTION});
+	my $self     = shift;
+	my $language = shift;
+
+	return $self->get_language_handle($language)
+	  ->maketext( $self->{DESCRIPTION} );
 }
 
 1;
@@ -125,12 +128,14 @@ current conditions or forecast object.
 
 Returns the uv index (number).
 
-=head2 description()
+=head2 description([$language])
 
 Returns the description whether this index is high or low.
 
 This description is translated if you specified the I<language>
 option as argument while instantiating your I<Weather::Com::Finder>.
+
+This attribute is I<dynamic language enabled>.
 
 =head1 AUTHOR
 
@@ -138,7 +143,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Thomas Schnuecker
+Copyright (C) 2004-2005 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

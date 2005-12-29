@@ -6,7 +6,7 @@ use warnings;
 use Weather::Com::L10N;
 use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.8 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -26,7 +26,7 @@ sub new {
 	my $self = $class->SUPER::new( \%parameters );
 
 	# getting first weather information
-	$self->{PRESSURE} = -1;    
+	$self->{PRESSURE} = -1;
 	$self->{TENDENCY} = 'unknown';
 
 	return $self;
@@ -48,12 +48,12 @@ sub update {
 	unless ( $bar{r} ) {
 		$self->{PRESSURE} = -1;
 	} else {
-		$self->{PRESSURE} = lc($bar{r});
+		$self->{PRESSURE} = lc( $bar{r} );
 	}
 	unless ( $bar{d} ) {
 		$self->{TENDENCY} = "unknown";
 	} else {
-		$self->{TENDENCY} = lc($bar{d});
+		$self->{TENDENCY} = lc( $bar{d} );
 	}
 
 	return 1;
@@ -68,8 +68,10 @@ sub pressure {
 }
 
 sub tendency {
-	my $self = shift;
-	return $self->{LH}->maketext($self->{TENDENCY});
+	my $self     = shift;
+	my $language = shift;
+
+	return $self->get_language_handle($language)->maketext( $self->{TENDENCY} );
 }
 
 1;
@@ -127,9 +129,11 @@ of one current conditions or forecast object.
 
 Returns the barometric pressure.
 
-=head2 tendency()
+=head2 tendency([$language])
 
 Returns the tendency of the barometric pressure.
+
+This attribute is I<dynamic language enabled>.
 
 =head1 AUTHOR
 

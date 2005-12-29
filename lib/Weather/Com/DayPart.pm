@@ -7,7 +7,7 @@ use Weather::Com::L10N;
 use Weather::Com::Wind;
 use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -74,13 +74,16 @@ sub update {
 # access data
 #------------------------------------------------------------------------
 sub type {
-	my $self = shift;
-	return $self->{LH}->maketext( $self->{TYPE} );    
+	my $self     = shift;
+	my $language = shift;
+	return $self->get_language_handle($language)->maketext( $self->{TYPE} );
 }
 
 sub conditions {
-	my $self = shift;
-	return $self->{LH}->maketext( lc($self->{CONDITIONS}) );
+	my $self     = shift;
+	my $language = shift;
+	return $self->get_language_handle($language)
+	  ->maketext( lc( $self->{CONDITIONS} ) );
 }
 
 sub humidity {
@@ -144,13 +147,17 @@ C<night()> method of a I<Weather::Com::DayForecast> object.
 
 =head1 METHODS
 
-=head2 type()
+=head2 type([$language])
 
 Will return I<day> or I<night>.
 
-=head2 conditions()
+This attribute is I<dynamic language enabled>.
+
+=head2 conditions([$language])
 
 Will return a textual description of the forecasted conditions.
+
+This attribute is I<dynamic language enabled>.
 
 =head2 humidity()
 

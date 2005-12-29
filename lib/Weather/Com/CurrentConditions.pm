@@ -11,7 +11,7 @@ use Weather::Com::Wind;
 use Weather::Com::L10N;
 use base "Weather::Com::Cached";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.10 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.12 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -91,9 +91,12 @@ sub icon {
 }
 
 sub description {
-	my $self = shift;
+	my $self     = shift;
+	my $language = shift;
+
 	$self->refresh();
-	return $self->{LH}->maketext( lc($self->{WEATHER}->{cc}->{t}) );    
+	return $self->get_language_handle($language)
+	  ->maketext( lc( $self->{WEATHER}->{cc}->{t} ) );
 
 }
 
@@ -262,12 +265,14 @@ Returns the location id used to instantiate this object.
 
 Returns the name of the location this current conditions belong to.
 
-=head2 description()
+=head2 description([$language])
 
 Returns a textual representation of the current weather conditions.
 
 This description is translated if you specified the I<language> option
 as argument for your I<Weather::Com::Finder>.
+
+This attribute is I<dynamic language enabled>.
 
 =head2 dewpoint() 
 

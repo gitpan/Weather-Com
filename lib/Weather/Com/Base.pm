@@ -10,14 +10,18 @@ use HTTP::Request;
 use XML::Simple;
 use Data::Dumper;
 use Time::Local;
+use base qw(Weather::Com::Object Exporter);
 
-use Weather::Com::L10N;
+#--------------------------------------------------------------------
+# Define some globals
+#--------------------------------------------------------------------
+our @EXPORT_OK = qw( 
+	celsius2fahrenheit 
+	fahrenheit2celsius 
+	convert_winddirection
+);
 
-use base qw(Exporter);
-our @EXPORT_OK =
-  qw ( celsius2fahrenheit fahrenheit2celsius convert_winddirection);
-
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.5 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 my $CITY_SEARCH_URI    = "http://xoap.weather.com/search/search?where=";
 my $WEATHER_SEARCH_URI = "http://xoap.weather.com/weather/local/";
@@ -68,7 +72,17 @@ my %winddir = (
 sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
-	my $self  = {};
+	my %parameters;
+	
+	# parameters provided by new method
+	if ( ref( $_[0] ) eq "HASH" ) {
+		%parameters = %{ $_[0] };
+	} else {
+		%parameters = @_;
+	}
+
+	# get SUPER instance
+	my $self = $class->SUPER::new( \%parameters );
 
 	# some general attributes
 	$self->{PROXY}   = "none";
@@ -85,21 +99,11 @@ sub new {
 	$self->{FORECAST} = 0;      # multi day forecast 0 = no, 1..10 days
 	$self->{LINKS}    = 0;
 
-	# parameters provided by new method
-	my %parameters = ();
-	if ( ref( $_[0] ) eq "HASH" ) {
-		%parameters = %{ $_[0] };
-	} else {
-		%parameters = @_;
-	}
-
+	# save params for further use
 	$self->{ARGS} = \%parameters;
 
-	# bless out object
-	bless( $self, $class );
-
 	# do some initialization with validity checking
-	$self = $self->_init( \%parameters );
+	$self = $self->_init();
 
 	# and some debugging output
 	$self->_debug( "Returning object: " . Dumper($self) );
@@ -168,10 +172,9 @@ sub _init {
 	$self->{LINKS}       = $params->{links}   if ( $params->{links} );
 
 	if ( $params->{lang} ) {
-		$self->{LH} = Weather::Com::L10N->get_handle( $params->{lang} )
-		  or croak("Language?");
+		$self->{LANGUAGE} = $params->{lang};
 	} else {
-		$self->{LH} = Weather::Com::L10N->get_handle('en_US');
+		$self->{LANGUAGE} = 'en_US';
 	}
 
 	return $self;
@@ -1046,7 +1049,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Thomas Schnuecker
+Copyright (C) 2004-2005 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

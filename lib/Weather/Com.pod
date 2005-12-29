@@ -1,8 +1,10 @@
 package Weather::Com;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.11 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.13 $ =~ /(\d+)/g;
 
 1;
+
+__END__
 
 =pod
 
@@ -80,6 +82,51 @@ just do it and send me your new language package. It then will be first put onto
 website for download and then it will be part of the next release.
 
 =back
+
+=head2 Dynamic Language Support
+
+With version 0.5 of Weather-Com I have introduced a new feature called 
+I<dynamic language support>.
+
+The language for all textual attributes that usually are translated in your default 
+language you chose while creating your C<Weather::Com::Finder> instance can now
+dynamically be changed on a I<per-method-call basis>.
+
+Have a look at this example:
+
+  #!/usr/bin/perl -w
+  use Weather::Com::Finder;
+
+  # you have to fill in your ids from weather.com here
+  my $PartnerId  = 'somepartnerid';
+  my $LicenseKey = 'mylicense';
+
+  my %weatherargs = (
+	'partner_id' => $PartnerId,
+	'license'    => $LicenseKey,
+	'language'   => 'en',
+  );
+
+  my $weather_finder = Weather::Com::Finder->new(%weatherargs);
+  
+  my @locations = $weather_finder->find('Heidelberg');
+  
+  foreach my $location (@locations) {
+    print "Found weather for city: ", $location->name(), "\n";
+    print "Current Conditions are ", 
+      $location->current_conditions()->description(), "\n";
+      
+    # HERE WE USE DYNAMIC LANGUAGE SUPPORT
+    print "That is in German: ",
+      $location->current_conditions()->description('de'), "\n";
+  }
+
+As you can see in this example, you can provide a language tag to
+a method that returns textual information.
+
+If you want to find out if the I<dynamic language support> is already
+implemented for a specific attribute of one Weather-Com class, have
+a look at the corresponding packages POD.
 
 =head1 TUTORIAL
 

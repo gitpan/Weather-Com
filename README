@@ -1,5 +1,5 @@
-Weather-Com version 0.4.1
-=========================
+Weather-Com version 0.5
+=======================
 
 Introduction:
 --------------
@@ -30,6 +30,12 @@ support webpage (http://www.schnuecker.org/weather-com). If you don't
 find your prefered language, feel free to build your own language pack
 and send it to me. I'll then put it on my support page and it will be
 part of the next release. 
+
+Up from version 0.5 there is 'dynamic language support'. That is, you
+can provide a language tag (e.g. 'de_DE') to a method returning
+textual information and the returned text than is not in the default
+language you defined while creating your Weather::Com::Finder
+instance but in the language you requested with your method call.
 
 To use the weather.com's service you have to register first
 (http://www.weather.com/services/xmloap.html), but's for free.

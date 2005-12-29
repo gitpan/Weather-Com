@@ -6,7 +6,7 @@ use warnings;
 use Weather::Com::L10N;
 use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.4 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -46,7 +46,7 @@ sub update {
 	}
 
 	$self->{ICON}        = $moon{icon};
-	$self->{DESCRIPTION} = lc($moon{t});
+	$self->{DESCRIPTION} = lc( $moon{t} );
 
 	return 1;
 }
@@ -60,8 +60,11 @@ sub icon {
 }
 
 sub description {
-	my $self = shift;
-	return $self->{LH}->maketext(lc($self->{DESCRIPTION}));
+	my $self     = shift;
+	my $language = shift;
+
+	return $self->get_language_handle($language)
+	  ->maketext( lc( $self->{DESCRIPTION} ) );
 }
 
 1;
@@ -114,12 +117,14 @@ of one current conditions or forecast object.
 
 =head1 METHODS
 
-=head2 description()
+=head2 description([$language])
 
 Returns a textual description of the current moon phase.
 
 This description is translated if you specified the I<language>
 option for you I<Weather::Com::Finder>.
+
+This attribute is I<dynamic language enabled>.
 
 =head2 icon()
 
@@ -131,7 +136,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Thomas Schnuecker
+Copyright (C) 2004-2005 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
