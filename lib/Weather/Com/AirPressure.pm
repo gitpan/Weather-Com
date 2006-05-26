@@ -6,7 +6,7 @@ use warnings;
 use Weather::Com::L10N;
 use base 'Weather::Com::Object';
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.8 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.9 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -71,7 +71,7 @@ sub tendency {
 	my $self     = shift;
 	my $language = shift;
 
-	return $self->get_language_handle($language)->maketext( $self->{TENDENCY} );
+	return $self->get_language_handle($language)->maketext(lc($self->{TENDENCY}) );
 }
 
 1;

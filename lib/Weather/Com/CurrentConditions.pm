@@ -11,7 +11,7 @@ use Weather::Com::Wind;
 use Weather::Com::L10N;
 use base "Weather::Com::Cached";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.12 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.13 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -123,7 +123,7 @@ sub pressure {
 	$self->refresh();
 
 	unless ( $self->{BAR} ) {
-		$self->{BAR} = Weather::Com::AirPressure->new();
+		$self->{BAR} = Weather::Com::AirPressure->new( $self->{ARGS} );
 	}
 	$self->{BAR}->update( $self->{WEATHER}->{cc}->{bar} );
 	return $self->{BAR};

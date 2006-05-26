@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Revision: 1.6 $
+# $Revision: 1.7 $
 use strict;
 use warnings;
 use Weather::Com::Finder;
@@ -8,7 +8,7 @@ use Weather::Com::Finder;
 $| = 1;
 
 # have a cvs driven version...
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 # you have to fill in your ids from weather.com here
 my $PartnerId  = '';
@@ -91,7 +91,7 @@ while ( chomp( my $input = <STDIN> ) ) {
 	}
 
 	# and if the user wants to exit...
-	last if ( $input =~ /^end|quit|exit$/ );
+	last if ( $input =~ /^end|quit|exit|:q$/ );
 
 	# search for matching locations
 	my $locations = $weather_finder->find($input);

@@ -18,6 +18,7 @@ lib/Weather/Com/Forecast.pm
 lib/Weather/Com/L10N.pm
 lib/Weather/Com/L10N/de.pm
 lib/Weather/Com/L10N/en_us.pm
+lib/Weather/Com/L10N/fr.pm
 lib/Weather/Com/Location.pm
 lib/Weather/Com/Moon.pm
 lib/Weather/Com/Object.pm
