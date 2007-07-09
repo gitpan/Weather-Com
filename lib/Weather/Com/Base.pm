@@ -21,7 +21,7 @@ our @EXPORT_OK = qw(
 	convert_winddirection
 );
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.9 $ =~ /(\d+)/g;
 
 my $CITY_SEARCH_URI    = "http://xoap.weather.com/search/search?where=";
 my $WEATHER_SEARCH_URI = "http://xoap.weather.com/weather/local/";
@@ -135,7 +135,7 @@ sub _init {
 
 	# set timeout if it is a possitive integer or 0
 	if ( $params->{timeout} ) {
-		unless (    ( $params->{timout} =~ /^\d+$/ )
+		unless (    ( $params->{timeout} =~ /^\d+$/ )
 				 && ( $params->{timeout} > -1 ) )
 		{
 			die ref($self)
@@ -1049,7 +1049,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2005 by Thomas Schnuecker
+Copyright (C) 2004-2007 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

@@ -15,7 +15,7 @@
 # initialization
 #
 no warnings;
-use Test::More tests => 7;
+use Test::More tests => 6;
 require 't/TestData.pm';
 
 BEGIN {
@@ -34,22 +34,6 @@ my %weatherargs = (
 my $wc = Weather::Com::Cached->new(%weatherargs);
 isa_ok( $wc, "Weather::Com::Cached", 'Is a Weatcher::Com::Cached object' );
 isa_ok( $wc, "Weather::Com::Base",   'Is a Weatcher::Com::Base object' );
-
-#
-# Test network connection
-#
-SKIP: {
-	eval { my $locations = $wc->search('New York'); };
-	skip(
-		 "Could not connect to 'weather.com'! No network connection available?",
-		 1
-	  )
-	  if ($@);
-
-	is_deeply( $wc->search('New York'),
-			   $NY_Hash, 'Locations search with network connection.' );
-
-}
 
 #
 # Test functionality if Test::MockObject is installed.

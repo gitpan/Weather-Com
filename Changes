@@ -1,5 +1,11 @@
 Revision history for Perl extension Weather::Com.
-$Revision: 1.20 $
+$Revision: 1.22 $
+
+0.5.2 Mon Jul 09 21:39 2007
+    - FIXED BUG #26126: Timeout did not work due to typo
+    - FIXED BUG #25154: (test within OOInterface.t failed)
+    - FIXED BUG #25151: Installing Weather-Com install 0.1
+    - FIXED BUG: test for network connection failed due to more New Yorks... 
 
 0.5.1 Fri May 26 14:41 2006
     - added French language pack
@@ -71,7 +77,7 @@ $Revision: 1.20 $
       So we'll get some structure in it. This will be usefull if one wants
       to write some other caching package, we than can tell it 
       Weather::Com::Cached::MySQL for example, etc.
-    - added automated version information (using the CVS $Revision: 1.20 $ tag)
+    - added automated version information (using the CVS $Revision: 1.22 $ tag)
       to all packages
     - added consistency checking for paramters passed to Weather::Com
     - Weather::Com now only accepts paths to put the cache in if it is
@@ -82,7 +88,6 @@ $Revision: 1.20 $
     - Added Proxy Authentication capabilities so you can use these module for
       applications behind an authenticated http proxy, also.
 	- enhanced Weather::Com::Simple with some methods to more granular data
-
 
 0.1   Sa Aug 21 22:00:00 2004
 	- original version

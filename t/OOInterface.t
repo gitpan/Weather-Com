@@ -164,7 +164,7 @@ SKIP: {
 	isa_ok( $ny->forecast, 'Weather::Com::Forecast', 'forecast:' );
 	my $d3 = $ny->forecast->day(2);
 	isa_ok( $d3, 'Weather::Com::DayForecast', 'day forecast:' );
-	is( $d3->date->formatted('ddmmyyyy'), '23042005', "Forecast date." );
+	is( $d3->date->formatted('ddmm'), '2304', "Forecast date." );
 	is( $d3->high,                        '18',       'Forecast high temp.' );
 	is( $d3->low,                         '11',       'Forecast low temp.' );
 	my $night = $d3->night;

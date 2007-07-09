@@ -15,7 +15,7 @@
 # initialization
 #
 no warnings;
-use Test::More tests => 7;
+use Test::More tests => 6;
 require 't/TestData.pm';
 
 BEGIN {
@@ -42,24 +42,8 @@ is( &Weather::Com::Base::celsius2fahrenheit(20),
 is( &Weather::Com::Base::fahrenheit2celsius(68),
 	20, 'Fahrenheit to Celsius conversion' );
 
-#
-# Test network connection
-#
-
 # remove all old cache files
 unlink <*.dat>;
-
-SKIP: {
-	eval { my $locations = $wc->search('New York'); };
-	skip(
-		 "Could not connect to 'weather.com'! No network connection available?",
-		 1
-	  )
-	  if ($@);
-	is_deeply( $wc->search('New York'),
-			   $NY_Hash, 'Locations search with network connection.' );    
-
-}
 
 #
 # Test functionality if Test::MockObject is installed.
@@ -78,7 +62,7 @@ SKIP: {
 						)
 	);
 
-	is_deeply( $wc->search('New York'),
+	is_deeply( $wc->search('Heidelberg'),
 			   $NY_Hash, 'Locations search with faked UserAgent' );
 
 	$mock->fake_module(
