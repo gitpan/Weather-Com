@@ -5,7 +5,7 @@ INSTALL
 MANIFEST
 README
 TODO
-lib/Weather/Com.pod
+lib/Weather/Com.pm
 lib/Weather/Com/AirPressure.pm
 lib/Weather/Com/Base.pm
 lib/Weather/Com/Cached.pm

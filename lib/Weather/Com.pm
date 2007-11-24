@@ -1,10 +1,27 @@
 package Weather::Com;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.14 $ =~ /(\d+)/g;
+use 5.006;
+use strict;
+use warnings;
+use Carp;
+use Weather::Com::Cached;
+use Weather::Com::Location;
+
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.8 $ =~ /(\d+)/g;
+
+
+#--------------------------------------------------------------------
+# This is just a dummy package containing POD
+#
+# Weather::Com.pod has been removed and this package has been added
+# to make Weather-Com work with CPAN shell.
+# 
+# Therefore, the whole tutorial went into this file.
+# Weather::Com.pod is no longer maintained.
+#--------------------------------------------------------------------
+
 
 1;
-
-__END__
 
 =pod
 

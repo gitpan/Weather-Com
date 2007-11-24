@@ -1,5 +1,8 @@
 Revision history for Perl extension Weather::Com.
-$Revision: 1.22 $
+$Revision: 1.23 $
+
+0.5.3 Thu Nov 22 20:00 2007
+    - FIXED BUG #30869: Cannot install via CPAN shell
 
 0.5.2 Mon Jul 09 21:39 2007
     - FIXED BUG #26126: Timeout did not work due to typo
@@ -77,7 +80,7 @@ $Revision: 1.22 $
       So we'll get some structure in it. This will be usefull if one wants
       to write some other caching package, we than can tell it 
       Weather::Com::Cached::MySQL for example, etc.
-    - added automated version information (using the CVS $Revision: 1.22 $ tag)
+    - added automated version information (using the CVS $Revision: 1.23 $ tag)
       to all packages
     - added consistency checking for paramters passed to Weather::Com
     - Weather::Com now only accepts paths to put the cache in if it is
