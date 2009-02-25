@@ -10,21 +10,21 @@ use Data::Dumper;
 use Time::Format;
 use Time::Local;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
 
 our %months = (
-	'Jan' => 0,
-	'Feb' => 1,
-	'Mar' => 2,
-	'Apr' => 3,
-	'May' => 4,
-	'Jun' => 5,
-	'Jul' => 6,
-	'Aug' => 7,
-	'Sep' => 8,
-	'Oct' => 9,
-	'Nov' => 10,
-	'Dec' => 11
+				'Jan' => 0,
+				'Feb' => 1,
+				'Mar' => 2,
+				'Apr' => 3,
+				'May' => 4,
+				'Jun' => 5,
+				'Jul' => 6,
+				'Aug' => 7,
+				'Sep' => 8,
+				'Oct' => 9,
+				'Nov' => 10,
+				'Dec' => 11
 );
 
 #------------------------------------------------------------------------
@@ -35,11 +35,10 @@ sub new {
 	my $class = ref($proto) || $proto;
 	my $self  = {};
 
-	$self->{EPOC} = timelocal(gmtime(time()));
+	$self->{EPOC} = timelocal( gmtime( time() ) );
 	if (@_) {
 		$self->{ZONE} = shift;
-	}
-	else {
+	} else {
 		$self->{ZONE} = 0;
 	}
 
@@ -60,7 +59,9 @@ sub set_date {
 	my @now        = gmtime();
 
 	my $localmidnight = undef;
-	eval { $localmidnight = timelocal( 0, 0, 0, $day, $months{$month}, $now[5] ); };
+	eval {
+		$localmidnight = timelocal( 0, 0, 0, $day, $months{$month}, $now[5] );
+	};
 	if ($@) {
 		croak($@);
 	}
@@ -130,24 +131,24 @@ sub epoc {
 	my $self = shift;
 
 	if (@_) {
-		$self->{EPOC} = timelocal(gmtime(shift));
+		$self->{EPOC} = timelocal( gmtime(shift) );
 	}
 
 	# we have to fake up $epoc
 	# because of Time::Format behaviour, $epoc has to be in localtime
 	# and to be able to provide a GMT conform epoc, we have to transform
 	# this here
-	return timegm(localtime($self->{EPOC}));
+	return timegm( localtime( $self->{EPOC} ) );
 }
 
 sub formatted {
-	my $self      = shift;
-	my $format    = shift;
-	
+	my $self   = shift;
+	my $format = shift;
+
 	# Time::Format always returns localtime of the server the
 	# script runs on. We have to eliminate this.
 	my $localepoc = $self->{EPOC} + ( $self->{ZONE} * 3600 );
-	return $time{ $format, $localepoc };    
+	return $time{ $format, $localepoc };
 }
 
 #------------------------------------------------------------------------
@@ -382,7 +383,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2007 by Thomas Schnuecker
+Copyright (C) 2004-2009 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

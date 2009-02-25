@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Revision: 1.7 $
+# $Revision: 1.2 $
 use strict;
 use warnings;
 use Weather::Com::Finder;
@@ -8,7 +8,7 @@ use Weather::Com::Finder;
 $| = 1;
 
 # have a cvs driven version...
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
 
 # you have to fill in your ids from weather.com here
 my $PartnerId  = '';
@@ -224,6 +224,7 @@ while ( chomp( my $input = <STDIN> ) ) {
 		  "\n";
 
 		foreach my $day ( $forecast->all() ) {
+			next unless ($day->date());
 			print "Have forecast for ", $day->date()->weekday(), ", ",
 			  $day->date()->date(), "\n";
 			print "Max Temp is ", $day->high(), "\n";
@@ -294,7 +295,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2005 by Thomas Schnuecker
+Copyright (C) 2004-2009 by Thomas Schnuecker
 
 This script is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

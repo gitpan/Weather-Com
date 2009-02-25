@@ -7,19 +7,17 @@ use Carp;
 use Weather::Com::Cached;
 use Weather::Com::Location;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.8 $ =~ /(\d+)/g;
-
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
 
 #--------------------------------------------------------------------
 # This is just a dummy package containing POD
 #
 # Weather::Com.pod has been removed and this package has been added
 # to make Weather-Com work with CPAN shell.
-# 
+#
 # Therefore, the whole tutorial went into this file.
 # Weather::Com.pod is no longer maintained.
 #--------------------------------------------------------------------
-
 
 1;
 
@@ -400,7 +398,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2007 by Thomas Schnuecker
+Copyright (C) 2004-2009 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

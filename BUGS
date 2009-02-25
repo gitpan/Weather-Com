@@ -10,7 +10,7 @@ Abstract: Cannot use strings containing a '/' for searches
 Problem Description:
 --------------------
 The weather.com server does not work with any search string containing
-a '/' - wether it is URL encoded or not!
+a '/' - whether it is URL encoded or not!
 Problem.
 
 Problem Solution:

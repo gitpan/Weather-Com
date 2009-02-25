@@ -11,7 +11,7 @@ use Weather::Com::Wind;
 use Weather::Com::L10N;
 use base "Weather::Com::Cached";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.14 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -36,7 +36,6 @@ sub new {
 	# current conditions object
 	$parameters{current}  = 1;
 	$parameters{forecast} = 0;
-	$parameters{links}    = 0;
 
 	# creating the SUPER instance
 	my $self = $class->SUPER::new( \%parameters );
@@ -348,7 +347,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2007 by Thomas Schnuecker
+Copyright (C) 2004-2009 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

@@ -1,10 +1,13 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Weather-Com
-version:      0.5.3
-version_from: 
-installdirs:  site
-requires:
+--- #YAML:1.0
+name:                Weather-Com
+version:             0.5.5
+abstract:            fetching weather information from I<weather.com>
+license:             ~
+author:              
+    - Thomas Schnuecker <thomas@schnuecker.de>
+generated_by:        ExtUtils::MakeMaker version 6.42_01
+distribution_type:   module
+requires:     
     Data::Dumper:                  
     Locale::Maketext:              
     LWP::UserAgent:                
@@ -13,6 +16,6 @@ requires:
     Time::Local:                   
     URI::Escape:                   
     XML::Simple:                   
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.17
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3

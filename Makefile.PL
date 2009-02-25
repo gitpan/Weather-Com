@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
 	NAME    => 'Weather::Com',
-	VERSION => '0.5.3',       # sets $VERSION
+	VERSION => '0.5.5',       # sets $VERSION
 	PREREQ_PM => {
 				   Data::Dumper     => "",
 				   Locale::Maketext => "",      

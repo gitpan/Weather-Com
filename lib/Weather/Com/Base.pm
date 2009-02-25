@@ -21,7 +21,7 @@ our @EXPORT_OK = qw(
 	convert_winddirection
 );
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.9 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.1 $ =~ /(\d+)/g;
 
 my $CITY_SEARCH_URI    = "http://xoap.weather.com/search/search?where=";
 my $WEATHER_SEARCH_URI = "http://xoap.weather.com/weather/local/";
@@ -97,7 +97,6 @@ sub new {
 	$self->{UNITS}    = 'm';    # could be 'm' for metric or 's' for us standard
 	$self->{CC}       = 0;      # show current conditions true/false
 	$self->{FORECAST} = 0;      # multi day forecast 0 = no, 1..10 days
-	$self->{LINKS}    = 0;
 
 	# save params for further use
 	$self->{ARGS} = \%parameters;
@@ -169,7 +168,6 @@ sub _init {
 	$self->{LICENSE_KEY} = $params->{license} if ( $params->{license} );
 	$self->{DEBUG}       = $params->{debug}   if ( $params->{debug} );
 	$self->{CC}          = $params->{current} if ( $params->{current} );
-	$self->{LINKS}       = $params->{links}   if ( $params->{links} );
 
 	if ( $params->{lang} ) {
 		$self->{LANGUAGE} = $params->{lang};
@@ -195,7 +193,7 @@ sub search {
 	# build up HTTP GET request
 	$place = uri_escape($place);
 	my $searchlocation = $CITY_SEARCH_URI . $place;
-	$searchlocation .= '&prod=xoap';
+	# $searchlocation .= '&prod=xoap';
 	if ( $self->{PARTNER_ID} && $self->{LICENSE_KEY} ) {
 		$searchlocation .= '&par=' . $self->{PARTNER_ID};
 		$searchlocation .= '&key=' . $self->{LICENSE_KEY};
@@ -269,9 +267,9 @@ sub get_weather {
 	if ( $self->{FORECAST} ) {
 		$searchlocation .= '&dayf=' . $self->{FORECAST};
 	}
-	if ( $self->{LINKS} ) {
-		$searchlocation .= '&link=xoap';
-	}
+
+	# add 'link' parameter in any case
+	$searchlocation .= '&link=xoap';
 
 	# get weather data
 	$self->_debug($searchlocation);
@@ -462,7 +460,6 @@ Weather::Com::Base - Perl extension for getting weather information from weather
   my %params = (
 		'current'    => 1,
 		'forecast'   => 3,
-		'links'      => 1,
 		'units'      => 's',
 		'proxy'      => 'http://proxy.sonstwo.de',
 		'timeout'    => 250,
@@ -570,11 +567,6 @@ between 1 and 10 a forecast for the number of days is requested. If
 set to any other value, this is interpreted as 0!
 
 Defaults to 0 (false).
-
-=item links => 0 | 1
-
-This parameter specifies whether to load some http links from I<weather.com>
-also or not.
 
 =item units => s | m
 
@@ -1049,7 +1041,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2007 by Thomas Schnuecker
+Copyright (C) 2004-2009 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

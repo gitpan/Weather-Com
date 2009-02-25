@@ -3,7 +3,7 @@ package Weather::Com::L10N::de;
 use base 'Weather::Com::L10N';
 
 # have a cvs driven version...
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.6 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.1 $ =~ /(\d+)/g;
 
 %Lexicon = (
 

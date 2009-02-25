@@ -8,7 +8,7 @@ use Data::Dumper;
 use Weather::Com::Base;
 use base "Weather::Com::Base";
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.7 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.3 $ =~ /(\d+)/g;
 
 #------------------------------------------------------------------------
 # Constructor
@@ -241,7 +241,6 @@ sub _store_params {
 				   'UNITS'       => $self->{UNITS},
 				   'CC'          => $self->{CC},
 				   'FORECAST'    => $self->{FORECAST},
-				   'LINKS'       => $self->{LINKS},
 	);
 
 	$self->{PARAMS} = \%params;
@@ -260,7 +259,6 @@ sub _reset_params {
 	$self->{UNITS}       = $self->{PARAMS}->{UNITS};
 	$self->{CC}          = $self->{PARAMS}->{CC};
 	$self->{FORECAST}    = $self->{PARAMS}->{FORECAST};
-	$self->{LINKS}       = $self->{PARAMS}->{LINKS};
 
 	return 1;
 }
@@ -305,7 +303,6 @@ Weather::Com::Cached - Perl extension for getting weather information from I<wea
 		'cache'      => '/tmp/weathercache',
 		'current'    => 1,
 		'forecast'   => 3,
-		'links'      => 1,
 		'units'      => 's',
 		'proxy'      => 'http://proxy.sonstwo.de',
 		'timeout'    => 250,
@@ -486,7 +483,7 @@ Thomas Schnuecker, E<lt>thomas@schnuecker.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2007 by Thomas Schnuecker
+Copyright (C) 2004-2009 by Thomas Schnuecker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

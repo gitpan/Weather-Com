@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
-# $Revision: 1.12 $
+# $Revision: 1.1 $
 use strict;
 use Weather::Com::Simple;
 
 $| = 1;
 
 # have a cvs driven version...
-our $VERSION = sprintf "%d.%03d", q$Revision: 1.12 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%03d", q$Revision: 1.1 $ =~ /(\d+)/g;
 
 # you have to fill in your ids from weather.com here
 my $PartnerId  = '';
