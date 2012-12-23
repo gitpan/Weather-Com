@@ -1,7 +1,7 @@
 Revision history for Perl extension Weather::Com.
-$Revision: 1.3 $
 
-0.6.0 Sat Dec 22 20:00 2012
+2.0.0 Sat Dec 22 20:00 2012
+    - ** Note the weather.com XML Data Feed has been retired **
     - Fix issue with lc of undefined value in _getWebPage (BUG #67228)
     - Clean up cache files after running test.
     - Update required modules.

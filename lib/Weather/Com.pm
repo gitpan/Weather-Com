@@ -25,7 +25,8 @@ our $VERSION = sprintf "%d.%03d", q$Revision: 1.2 $ =~ /(\d+)/g;
 
 =head1 NAME
 
-Weather::Com - fetching weather information from I<weather.com>
+Weather::Com - fetching weather information from weather.com
+(Note that weather.com is retiring the XML Data Feed.)
 
 =head1 SYNOPSIS
 

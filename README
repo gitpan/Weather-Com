@@ -1,6 +1,12 @@
 Weather-Com version 0.5
 =======================
 
+** NOTE **
+The Weather Channel is retiring the weather.com XML Data Feed
+and is replacing it with a Weather API.
+
+http://feedback.weather.com/knowledgebase/articles/35599-why-is-the-weather-com-xml-data-feed-being-retired
+
 Introduction:
 --------------
 Weather-Com is meant to be a module suite enabling the perl programmer

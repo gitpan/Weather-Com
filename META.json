@@ -1,5 +1,5 @@
 {
-   "abstract" : "fetching weather information from I<weather.com>",
+   "abstract" : "fetching weather information from weather.com",
    "author" : [
       "Thomas Schnuecker <thomas@schnuecker.de>"
    ],
@@ -48,5 +48,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "v0.6.0"
+   "version" : "v2.0.0"
 }

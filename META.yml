@@ -1,5 +1,5 @@
 ---
-abstract: "fetching weather information from I<weather.com>"
+abstract: 'fetching weather information from weather.com'
 author:
   - 'Thomas Schnuecker <thomas@schnuecker.de>'
 build_requires:
@@ -30,4 +30,4 @@ requires:
   Time::Local: 0
   URI::Escape: 0
   XML::Simple: 0
-version: v0.6.0
+version: v2.0.0
