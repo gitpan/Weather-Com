@@ -1,0 +1,52 @@
+{
+   "abstract" : "fetching weather information from I<weather.com>",
+   "author" : [
+      "Thomas Schnuecker <thomas@schnuecker.de>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Weather-Com",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : "0",
+            "Class::Struct" : "0",
+            "Data::Dumper" : "0",
+            "HTTP::Request" : "0",
+            "LWP::UserAgent" : "0",
+            "Locale::Maketext" : "0",
+            "Storable" : "0",
+            "Test::MockObject" : "0",
+            "Time::Format" : "1.0",
+            "Time::Local" : "0",
+            "URI::Escape" : "0",
+            "XML::Simple" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "v0.6.0"
+}

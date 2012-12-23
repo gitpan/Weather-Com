@@ -308,10 +308,10 @@ sub _getWebPage {
 	my $request = HTTP::Request->new( "GET" => $path );
 
 	$ua->proxy( 'http', $self->{PROXY} )
-	  if ( lc( $self->{PROXY} ) ne "none" );
+	  if ( defined $self->{PROXY} && lc( $self->{PROXY} ) ne "none" );
 	$request->proxy_authorization_basic( $self->{PROXY_USER},
 										 $self->{PROXY_PASS} )
-	  if ( lc( $self->{PROXY_USER} ) ne "none" );
+	  if ( defined $self->{PROXY_USER} && lc( $self->{PROXY_USER} ) ne "none" );
 	$ua->timeout( $self->{TIMEOUT} );
 
 	# print some debugging info on the user agent object

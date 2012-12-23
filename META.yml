@@ -1,21 +1,33 @@
---- #YAML:1.0
-name:                Weather-Com
-version:             0.5.5
-abstract:            fetching weather information from I<weather.com>
-license:             ~
-author:              
-    - Thomas Schnuecker <thomas@schnuecker.de>
-generated_by:        ExtUtils::MakeMaker version 6.42_01
-distribution_type:   module
-requires:     
-    Data::Dumper:                  
-    Locale::Maketext:              
-    LWP::UserAgent:                
-    Storable:                      
-    Time::Format:                  1.0
-    Time::Local:                   
-    URI::Escape:                   
-    XML::Simple:                   
+---
+abstract: "fetching weather information from I<weather.com>"
+author:
+  - 'Thomas Schnuecker <thomas@schnuecker.de>'
+build_requires:
+  ExtUtils::MakeMaker: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630'
+license: unknown
 meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Weather-Com
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  Carp: 0
+  Class::Struct: 0
+  Data::Dumper: 0
+  HTTP::Request: 0
+  LWP::UserAgent: 0
+  Locale::Maketext: 0
+  Storable: 0
+  Test::MockObject: 0
+  Time::Format: 1.0
+  Time::Local: 0
+  URI::Escape: 0
+  XML::Simple: 0
+version: v0.6.0

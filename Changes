@@ -1,6 +1,14 @@
 Revision history for Perl extension Weather::Com.
 $Revision: 1.3 $
 
+0.6.0 Sat Dec 22 20:00 2012
+    - Fix issue with lc of undefined value in _getWebPage (BUG #67228)
+    - Clean up cache files after running test.
+    - Update required modules.
+    - Require Perl 5.8 to avoid unicode issue with regular expression
+      under Perl 5.6.2. (We can fix this module to work under 5.6.2
+      later if needed.)
+
 0.5.5 Wed Feb 25 10:30 2009
 	- after test, official release
 

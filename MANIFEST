@@ -38,3 +38,4 @@ t/Simple.t
 t/TestData.pm
 t/Wind.t
 META.yml                                 Module meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)
